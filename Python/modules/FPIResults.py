@@ -1120,7 +1120,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         #print nsp,year,month
 
         MD = BinMonthlyData(SITE,year,month,SPLIT=SPLIT,KP=KP,QF=QF,VERBOSE=VERBOSE)
-        tlim = [MD.t[len(MD.t)/5],MD.t[-len(MD.t)/5]]
+        tlim = [MD.t[len(MD.t)//5],MD.t[-len(MD.t)//5]]
         MD.t  = MD.t + _dt.timedelta(seconds=ut_offset)
         #	tlim = [MD.t[len(MD.t)/5],MD.t[-len(MD.t)/5]]
         MD.t2 = MD.t + _dt.timedelta(minutes=3)
