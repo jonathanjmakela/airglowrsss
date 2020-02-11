@@ -19,7 +19,7 @@ Included functions are:
     PlotSpaghetti
     SetBinTime
     SetFilter
-        
+
 '''
 import matplotlib as _mpl
 import matplotlib.dates as _md
@@ -35,7 +35,7 @@ import fpiinfo as _fpiinfo
 from multiprocessing import Pool as _pool
 from functools import partial as _partial
 
-# I have no idea where these ipython.html.widgets and matplotlib.use are called, 
+# I have no idea where these ipython.html.widgets and matplotlib.use are called,
 # but these warings occur in BinMonthlyData... TOBERECTIFIED DJF
 import warnings
 warnings.filterwarnings("ignore")
@@ -46,21 +46,21 @@ def SetBinTime(MIN):
     '''
     Summary:
         Sets Bin time for Binning functions
-        
+
     Input:
         MIN = Amount of time per bin in minutes
-        
+
     History:
         10/6/14 -- Written by DJF (dfisher2@illinois.edu)
     '''
     global b_len
     global btime
     global times
-    b_len = 24*60/MIN
+    b_len = 24*60//MIN
     btime = _np.array([(arbdate + _dt.timedelta(minutes=_x)).time() for _x in range(0,b_len*MIN,MIN)])
     times = _np.array([(arbdate + _dt.timedelta(minutes=_x)) for _x in range(0,b_len*MIN,MIN)])
 
-    print 'Bin length is set to %i minutes.'%MIN
+    print('Bin length is set to %i minutes.'%MIN)
 
 
 def SetFilter(UMIN=-250.,UMAX=250.,VMIN=-250.,VMAX=250.,WMIN=-75.,WMAX=75.,TMIN=600.,TMAX=1400., \
@@ -68,7 +68,7 @@ def SetFilter(UMIN=-250.,UMAX=250.,VMIN=-250.,VMAX=250.,WMIN=-75.,WMAX=75.,TMIN=
     '''
     Summary:
         Returns filter limits for averages. This is used because the Level0 automated processing \
-            quality flags don't always capture 100%. 
+            quality flags don't always capture 100%.
 
     Inputs:
         UMIN = Zonal wind minimum
@@ -92,16 +92,16 @@ def SetFilter(UMIN=-250.,UMAX=250.,VMIN=-250.,VMAX=250.,WMIN=-75.,WMAX=75.,TMIN=
            'umax':UMAX,'umin':UMIN,'ue':WERR, \
            'vmax':VMAX,'vmin':VMIN,'ve':WERR, \
            'wmax':WMAX,'wmin':WMIN,'we':WERR}
-   
+
     if VERBOSE:
-        print 'The following limits are set:'
-        print sorted(lim.items())
+        print('The following limits are set:')
+        print(sorted(lim.items()))
 
 
 # Set up default parameters
 _mpl.rcParams.update({'font.size': 11})
 dirout = '/rdata/airglow/database/L2/plots/'
-_n_cores = 16 
+_n_cores = 16
 
 # Binning Time
 arbdate = _dt.datetime(1970,1,1)
@@ -109,7 +109,7 @@ _utc = _pytz.UTC
 SetBinTime(30)
 SetFilter()
 loader = _pyglow.Point(arbdate,0,0,250.) # First run is slow, so get it out of the way now
-print 'FPIResults Ready\n'
+print('FPIResults Ready\n')
 
 
 def FilterData(DATA,QF=1):
@@ -119,25 +119,25 @@ def FilterData(DATA,QF=1):
 
     Inputs:
         DATA = The data object
-        QF   = Quality Flag max [default = 1] 
+        QF   = Quality Flag max [default = 1]
 
     History:
         3/20/13 -- Written by DJF (dfisher2@illinois.edu)
         4/18/16 -- Modified by DJF
     '''
     # Set default flag limits
-    qualitylimit = QF+1 
+    qualitylimit = QF+1
     bcnt = 0
-    
+
     # For each direction in DATA
     for r1 in DATA:
         if len(r1.t1)>0:
             #r1 = data[link]
             #ind1 = range(0,len(r1.t1))
-            ind1 = range(len(r1.t1))
+            ind1 = list(range(len(r1.t1)))
             alld = len(ind1)
 
-            # Filter using flags 
+            # Filter using flags
             if len(r1.flag_T) >= 1:
                 ind1 = _np.delete(ind1, _np.where(r1.flag_T[ind1] >= qualitylimit))
                 ind1 = _np.delete(ind1, _np.where(r1.flag_wind[ind1] >= qualitylimit))
@@ -165,7 +165,7 @@ def FilterData(DATA,QF=1):
             r1.cut(arbdate,arbdate+_dt.timedelta(days=1),ind1)
             bcnt += alld - len(ind1)
     return(bcnt)
-    
+
 
 
 def WeightedAverage(VAL,STD,CNT=None,AXIS=0,test=False):
@@ -205,7 +205,7 @@ def WeightedAverage(VAL,STD,CNT=None,AXIS=0,test=False):
         STD = STD.T
         if CNT is not None:
             CNT = CNT.T
-    
+
     # weighted mean and weighted std
     wt = (VAL/VAL)/STD**2
     V1 = _np.nansum(wt,axis=1)
@@ -220,7 +220,7 @@ def WeightedAverage(VAL,STD,CNT=None,AXIS=0,test=False):
         SS = _np.sqrt(_np.nansum(_np.subtract(VAL.T,WM)**2,axis=0)/(_np.array(CNT)-1.))
         SE = 2.*WE**4/(_np.array(CNT)-1.)
         WSS= _np.sqrt(_np.nansum(wt.T*_np.subtract(VAL.T,WM)**2,axis=0)/(V1-V2/V1))
-        AE = _np.sqrt(_np.nansum(STD**2,axis=1)/CNT) 
+        AE = _np.sqrt(_np.nansum(STD**2,axis=1)/CNT)
         P16 = _np.nanpercentile(VAL,16,axis=1)
         P25 = _np.nanpercentile(VAL,25,axis=1)
         P50 = _np.nanpercentile(VAL,50,axis=1)
@@ -232,11 +232,11 @@ def WeightedAverage(VAL,STD,CNT=None,AXIS=0,test=False):
         SS = _np.sqrt(_np.nansum(_np.subtract(VAL.T,WM)**2,axis=0)/(_np.array(CNT)-1.))
         SE = 2.*WE**4/(_np.array(CNT)-1.)
         WSS = _np.sqrt(_np.nansum(wt.T*_np.subtract(VAL.T,WM)**2,axis=0)/(V1-V2/V1))
-        AE = _np.sqrt(_np.nansum(STD**2,axis=1)/CNT) 
+        AE = _np.sqrt(_np.nansum(STD**2,axis=1)/CNT)
         return(WM,WE,SS,SE)
         #return(WM,WE,SS,SE,WSS,AE)
-    
-    
+
+
 
 def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
     '''
@@ -252,7 +252,7 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
         CV    = Include CV directions [default = True]
         QF    = Quality Flag Limit Allowed [default = 1]
         WIS0  = Flag to use w=0 in processing [default = False]
-        
+
     Outputs:
         DATA  = Object with winds, Temps, and more
 
@@ -260,17 +260,17 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
         3/20/13 -- Written by DJF (dfisher2@illinois.edu)
 
     '''
-    
+
     # Create the YYYYMMDD date format
     dn = _dt.datetime(YEAR,1,1) + _dt.timedelta(days = DOY-1)
     year = dn.strftime('%Y')
     date = dn.strftime('%Y%m%d')
-    
+
     # Load in Day's Data
     if SITE in ['renoir','peru','nation']:
         nets = _fpiinfo.get_network_info(SITE)
         tots = _fpiinfo.get_all_sites_info()
-        sites = [x for x in nets.keys() if x in tots]
+        sites = [x for x in list(nets.keys()) if x in tots]
         lla = nets['mean_location']
         project = SITE.lower()
     else:
@@ -280,7 +280,7 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
         lla = siteinfo['Location']
     data = L2.GetLevel2(project,dn,w_is_0=WIS0)
     bc = FilterData(data,QF)
-    
+
     # Get Empty
     d = _BinnedData(dn,SITE)
     d.key = "Daily"
@@ -314,7 +314,7 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
         d.moonup = r1.moonup
         # for all sites in list
         for s in sites:
-            # TODO: Verify site is good 
+            # TODO: Verify site is good
             try:
                 instr = _fpiinfo.get_instr_at(s,dn)[0]
             except:
@@ -364,14 +364,14 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
                             iData[bin,count[bin]] = r1.i[zelda]
                             ieData[bin,count[bin]] = r1.ie[zelda]
                         count[bin] += 1
-            
-    
+
+
     ## Weighted Mean of Winds
     # Zonal
     uD,ueD = WeightedAverage(uData,ueData)
     # Meridional
     vD,veD = WeightedAverage(vData,veData)
-    # Vert            
+    # Vert
     wD,weD = WeightedAverage(wData,weData)
     # Temps
     TD,TeD = WeightedAverage(TData,TeData)
@@ -382,7 +382,7 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
         # Zonal2 - West
         u2D,u2eD = WeightedAverage(u2Data,u2eData)
         # Meridional2 - South
-        v2D,v2eD = WeightedAverage(v2Data,v2eData) 
+        v2D,v2eD = WeightedAverage(v2Data,v2eData)
 
     # Save Averages
     d.u = uD
@@ -412,8 +412,8 @@ def BinDailyData(SITE,YEAR,DOY,SPLIT=False,KP=[0,10],CV=True,QF=1,WIS0=False):
     d.bads = bc
     d.doabarrelroll()
     return d
-    
-    
+
+
 def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIET=False,MULTICORE=True):
     '''
     Summary:
@@ -442,7 +442,7 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
     dn = _dt.datetime(YEAR,1,1) + _dt.timedelta(days = DOY-1)
     year = dn.strftime('%Y')
     date = dn.strftime('%Y%m%d')
-    
+
     # allocate Arrays
     uData  = _np.zeros((b_len,1))
     ueData = _np.zeros((b_len,1))
@@ -455,19 +455,19 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
     iData  = _np.zeros((b_len,1))
     ieData = _np.zeros((b_len,1))
     aData  = _np.zeros((b_len,1))
-    
+
     # Get Empty
     d = _BinnedData(dn,WMODEL)
     d.key = 'DailyModel'
     d.t = times
     d.lla = SITELLA
     if _np.isnan(SITELLA).any():
-        print 'Bad LLA'
+        print('Bad LLA')
         return
 
     # Altitudes
     if WEIGHTED:
-        alts = range(100,450,25) # This has been tested and shows it is accurate as 1 km spacing
+        alts = list(range(100,450,25)) # This has been tested and shows it is accurate as 1 km spacing
     else:
         alts = [ALT]
         d.notes+= 'AG peak is set to '+ str(ALT) +'km'
@@ -500,8 +500,8 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
 
     else:
         # Faux model
-        #ag6300 = Fmodel('high') #high 
-        
+        #ag6300 = Fmodel('high') #high
+
         # Fill Data
         for tind,t in enumerate(times):
             for aind,alt in enumerate(alts):
@@ -509,7 +509,7 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
                 if QUIET:
                     pt.kp = 0.0
                     pt.ap = 0.0
-        
+
                 # Intensity
                 pt.run_airglow() #FIX THIS AFTER ANALYSIS
                 #pt.ag6300 = ag6300[aind]
@@ -524,14 +524,14 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
                 elif WMODEL.lower() == 'hwm14':
                     pt.run_hwm(version=2014)
                 else:
-                    print 'Bad Wind Model'
+                    print('Bad Wind Model')
                 uData[tind] += pt.u*pt.ag6300
                 ueData[tind] += 1.
                 vData[tind] += pt.v*pt.ag6300
                 veData[tind] += 1.
                 #wData[tind] += pt.w*pt.ag6300
                 #weData[tind] += 1.
-                
+
                 # Temp
                 if TMODEL.lower() == 'msis':
                     pt.run_msis()
@@ -540,9 +540,9 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
                     pt.run_iri()
                     TData[tind] += pt.Tn_iri*pt.ag6300
                 else:
-                    print 'Bad Temp Model'
+                    print('Bad Temp Model')
                 TeData[tind] += 1.
-                
+
                 # Altitude
                 aData[tind] += alt*pt.ag6300
 
@@ -571,10 +571,10 @@ def GetModels(SITELLA,YEAR,DOY,WMODEL,TMODEL='msis',ALT=250.,WEIGHTED=False,QUIE
     d.ic = _np.ones([len(times)])
     d.alts = aData[:,0]
     d.doabarrelroll()
-    
+
     return d
-        
-        
+
+
 def _MPsinglemodel(T,ALTS,SITELLA,WMODEL,TMODEL,QUIET):
     '''
     Summary:
@@ -613,7 +613,7 @@ def _MPsinglemodel(T,ALTS,SITELLA,WMODEL,TMODEL,QUIET):
         if QUIET:
             pt.kp = 0.0
             pt.ap = 0.0
-    
+
         # Intensity
         pt.run_airglow() #FIX THIS AFTER ANALYSIS
         #pt.ag6300 = ag6300[aind]
@@ -628,14 +628,14 @@ def _MPsinglemodel(T,ALTS,SITELLA,WMODEL,TMODEL,QUIET):
         elif WMODEL.lower() == 'hwm14':
             pt.run_hwm(version=2014)
         else:
-            print 'Bad Wind Model'
+            print('Bad Wind Model')
         uData  += pt.u*pt.ag6300
         ueData += 1.
         vData  += pt.v*pt.ag6300
         veData += 1.
         #wData  += pt.w*pt.ag6300
         #weData += 1.
-        
+
         # Temp
         if TMODEL.lower() == 'msis':
             pt.run_msis()
@@ -644,9 +644,9 @@ def _MPsinglemodel(T,ALTS,SITELLA,WMODEL,TMODEL,QUIET):
             pt.run_iri()
             TData += pt.Tn_iri*pt.ag6300
         else:
-            print 'Bad Temp Model'
+            print('Bad Temp Model')
         TeData += 1.
-        
+
         # alt
         aData += alt*pt.ag6300
 
@@ -658,8 +658,8 @@ def _MPsinglemodel(T,ALTS,SITELLA,WMODEL,TMODEL,QUIET):
     aData = aData/iData
 
     return(uData,ueData,vData,veData,TData,TeData,iData,ieData,aData)
-    
-    
+
+
 
 def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=True,QF=1, \
         SITELLA=[],TMODEL='msis',ALT=250.,WEIGHTED=False,QUIET=False,VERBOSE=True):
@@ -686,7 +686,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
         VERBOSE  = Print information to stdout [default = True]
 
     Outputs:
-        DATA = dictionary of data whose keys are Zonal, Meridional, or Temp 
+        DATA = dictionary of data whose keys are Zonal, Meridional, or Temp
                Temp contains Temp and Temp_Error (averaged from all directions)
                Zonal/Meridional contains Wind and Wind_Error
 
@@ -705,8 +705,8 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
     d = _BinnedData(dn,SITE)
     d.t = times
     d.key = '{0:%B} {0:%Y}'.format(dn)
-    
-    # Get Empty 
+
+    # Get Empty
     dim = 31*5*10
     uData   = _np.empty((b_len,dim))*_np.nan
     ueData  = _np.empty((b_len,dim))*_np.nan
@@ -738,12 +738,12 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
     cards = 0
     cvs = 0
     bads = 0
-    
+
     # Collect month's Data:
     if DLIST == []:
         doystart = (dn - _dt.datetime(YEAR,1,1)).days+1
         doyend = doystart + _cal.monthrange(YEAR,MONTH)[1]
-        dl = range(doystart,doyend)
+        dl = list(range(doystart,doyend))
         yl = list(_np.array(dl)/_np.array(dl)*YEAR)
     elif len(DLIST) == 2 and len(YLIST) == 0:
         # Use listed DOY +/- SPREAD disregarding month.
@@ -762,17 +762,17 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
             dl.append(doy)
             yl.append(yr)
         if not(dl):
-            print 'Doy List contains no days in desired month.'
+            print('Doy List contains no days in desired month.')
 
     # Make a site list
     if SITE in ['renoir','peru','nation']:
         nets = _fpiinfo.get_network_info(SITE)
         tots = _fpiinfo.get_all_sites_info()
-        sites = [x for x in nets.keys() if x in tots]
+        sites = [x for x in list(nets.keys()) if x in tots]
     else:
         sites = [SITE]
     if 'hwm' in SITE:
-        mflag = True   
+        mflag = True
 
     # Get inputs for multicores
     doy_arg = [a for s in sites for a in dl]
@@ -783,7 +783,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
     singleday = _partial(_MPsingleday,SPLIT=SPLIT,KP=KP,CV=CV,QF=QF, \
             SITELLA=SITELLA,TMODEL=TMODEL,ALT=ALT,WEIGHTED=WEIGHTED,QUIET=QUIET)
     pool = _pool(processes=_n_cores)
-    results = pool.map(singleday,zip(s_arg,yr_arg,doy_arg))
+    results = pool.map(singleday,list(zip(s_arg,yr_arg,doy_arg)))
 
     # Unwrap results
     for ind,doy in enumerate(doy_arg):
@@ -798,11 +798,11 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
 
         # Undo shift for easy averaging
         DD.doabarrelroll()
-        
+
         # Count days total used
         if sum(_np.isfinite(DD.T)):
             oscar.append(doy)
-        # Average Location 
+        # Average Location
         if len(DD.lla) == 3:
             lat.append(DD.lla[0])
             lon.append(DD.lla[1])
@@ -838,7 +838,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
             v2Count += DD.v2c
     pool.close()
     pool.join()
-        
+
     # Get count of days used in each bin
     uDays = dim - sum(_np.isnan(uData.T))
     uDays = [_np.nan if x<dimset else x for x in uDays]
@@ -855,12 +855,12 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
         u2Days = [_np.nan if x<dimset else x for x in u2Days]
         v2Days = dim - sum(_np.isnan(v2Data.T))
         v2Days = [_np.nan if x<dimset else x for x in v2Days]
-    
+
     # Zonal
     uD,uDe,uV,uVe,uV2,uU,u16,u25,u50,u75,u84 = WeightedAverage(uData,ueData,uDays,test=True)
     # Meridional
     vD,vDe,vV,vVe,vV2,vU,v16,v25,v50,v75,v84 = WeightedAverage(vData,veData,vDays,test=True)
-    # Vert            
+    # Vert
     wD,wDe,wV,wVe,wV2,wU,w16,w25,w50,w75,w84 = WeightedAverage(wData,weData,wDays,test=True)
     #  Temps
     TD,TDe,TV,TVe,TV2,TU,T16,T25,T50,T75,T84 = WeightedAverage(TData,TeData,TDays,test=True)
@@ -876,7 +876,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
         d.f107 = _np.nanmean(F107)
     else:
         d.f107 = _np.nansum(F107)/(cards+cvs)
-    
+
     # Save Averages
     d.lla = _np.array([_np.nanmean(lat),_np.nanmean(lon),_np.nanmean(alt)])
     d.u  = uD
@@ -944,7 +944,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
     d.i50= i50
     d.i75= i75
     d.i84= i84
-    
+
     if SPLIT and not(mflag):
         d.u2  = u2D
         d.u2e = u2De
@@ -979,17 +979,17 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
 
     #print '%s %s %04d'%(SITE, mon,YEAR),'Days used:',len(d.daysused),' Ave pts/time: %02.2f'%(_np.nanmin(_np.array([_np.ma.masked_array(ucount,_np.isnan(ucount)).mean(), _np.ma.masked_array(vcount,_np.isnan(vcount)).mean(), _np.ma.masked_array(Tcount,_np.isnan(Tcount)).mean()])))
     if VERBOSE:
-        print '%s %s %04d'%(SITE, mon,YEAR),' Days used:',len(d.daysused)
+        print('%s %s %04d'%(SITE, mon,YEAR),' Days used:',len(d.daysused))
         if SPLIT and not(mflag):
-            print 'Ave pts/bin: u-%02.2f  u2-%02.2f  v-%02.2f  v2-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uCount),_np.nanmean(u2Count),_np.nanmean(vCount),_np.nanmean(v2Count),_np.nanmean(wCount),_np.nanmean(TCount))
-            print 'Ave day/bin: u-%02.2f  u2-%02.2f  v-%02.2f  v2-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uDays),_np.nanmean(u2Days),_np.nanmean(vDays),_np.nanmean(v2Days),_np.nanmean(wDays),_np.nanmean(TDays))
+            print('Ave pts/bin: u-%02.2f  u2-%02.2f  v-%02.2f  v2-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uCount),_np.nanmean(u2Count),_np.nanmean(vCount),_np.nanmean(v2Count),_np.nanmean(wCount),_np.nanmean(TCount)))
+            print('Ave day/bin: u-%02.2f  u2-%02.2f  v-%02.2f  v2-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uDays),_np.nanmean(u2Days),_np.nanmean(vDays),_np.nanmean(v2Days),_np.nanmean(wDays),_np.nanmean(TDays)))
 
         else:
-            print 'Ave pts/bin: u-%02.2f  v-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uCount),_np.nanmean(vCount),_np.nanmean(wCount),_np.nanmean(TCount))
-            print 'Ave day/bin: u-%02.2f  v-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uDays),_np.nanmean(vDays),_np.nanmean(wDays),_np.nanmean(TDays))
-        print 'Cards:',cards,' CVs:',cvs,' %%CV: %02.2f'%(100.*cvs/(cvs+cards+.000001))
-        print 'Bads:',bads, ' %%Good: %02.2f'%(100.*(cards+cvs)/(cards+cvs+bads+.000001))
-        print 'Days:',d.daysused,'\n'
+            print('Ave pts/bin: u-%02.2f  v-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uCount),_np.nanmean(vCount),_np.nanmean(wCount),_np.nanmean(TCount)))
+            print('Ave day/bin: u-%02.2f  v-%02.2f  w-%02.2f  T-%02.2f'%(_np.nanmean(uDays),_np.nanmean(vDays),_np.nanmean(wDays),_np.nanmean(TDays)))
+        print('Cards:',cards,' CVs:',cvs,' %%CV: %02.2f'%(100.*cvs/(cvs+cards+.000001)))
+        print('Bads:',bads, ' %%Good: %02.2f'%(100.*(cards+cvs)/(cards+cvs+bads+.000001)))
+        print('Days:',d.daysused,'\n')
 
     return d
 
@@ -1003,7 +1003,7 @@ def _MPsingleday(SITE_YEAR_DOY,SPLIT,KP,CV,QF,SITELLA,TMODEL,ALT,WEIGHTED,QUIET)
         SITE_YEAR_DOY = tuple of the following variable inputs:
             SITE      = sites of interest, e.g. 'UAO'
             YEAR      = year, e.g. 2013
-            DOY       = day of year, e.g. 47 
+            DOY       = day of year, e.g. 47
         SPLIT         = [data param] Split look directions in binning [default = False]
         KP            = [data param] Filter days by KP [default = [0,10] - all kp]
         CV            = [data param] use CV modes [default = True]
@@ -1021,7 +1021,7 @@ def _MPsingleday(SITE_YEAR_DOY,SPLIT,KP,CV,QF,SITELLA,TMODEL,ALT,WEIGHTED,QUIET)
     History:
         5/03/16 -- Written by DJF (dfisher2@illinois.edu)
     '''
-    
+
     site = SITE_YEAR_DOY[0]
     year = SITE_YEAR_DOY[1]
     doy  = SITE_YEAR_DOY[2]
@@ -1050,7 +1050,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
     '''
     Summary:
         Plots monthly averages in a 2x6 month plot, binning by year
-    
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         YEAR = year, e.g. 2013
@@ -1066,9 +1066,9 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
 
     History:
         6/13/13 -- Written by DJF (dfisher2@illinois.edu)
-    
+
     '''
-    
+
     # Set up Figures
     axlim = 0
     _mpl.rcParams.update({'font.size':8})
@@ -1093,7 +1093,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
     csize = 0.0001
     lwide = 2
     msize = 3
-    
+
     # Get UT offset if SLT needed
     ut_offset = 0
     if not(UT):
@@ -1103,12 +1103,12 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
             try:
                 ut_offset = _fpiinfo.get_site_info(SITE)['Location'][1]/360.*(24*60*60)
             except:
-                print 'No UT/LT conversion... Plots lie! Actually in UT'
+                print('No UT/LT conversion... Plots lie! Actually in UT')
 
     # Get Monthly Average for basis
     dn = _dt.datetime(YEAR,MONTHSTART,1)
     if SPLIT and NMONTHS > 12:
-        print "Only 1 year allowed in SPLIT Mode"
+        print("Only 1 year allowed in SPLIT Mode")
         NMONTHS = 12
     for nsp,mon in enumerate(range(0,NMONTHS)):
         nsp = ((nsp*2)%24 -11*((nsp*2)%24>11))%12  # fill left column then right.
@@ -1122,16 +1122,16 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         MD = BinMonthlyData(SITE,year,month,SPLIT=SPLIT,KP=KP,QF=QF,VERBOSE=VERBOSE)
         tlim = [MD.t[len(MD.t)/5],MD.t[-len(MD.t)/5]]
         MD.t  = MD.t + _dt.timedelta(seconds=ut_offset)
-#	tlim = [MD.t[len(MD.t)/5],MD.t[-len(MD.t)/5]]
+        #	tlim = [MD.t[len(MD.t)/5],MD.t[-len(MD.t)/5]]
         MD.t2 = MD.t + _dt.timedelta(minutes=3)
         gflag = 'on'
- 
+
         try:
-	    tstart = _np.where(_np.isnan(MD.T[:-1])*_np.isfinite(MD.T[1:]))[0][0]-1
-    	    tend   = _np.where(_np.isfinite(MD.T[:-1])*_np.isnan(MD.T[1:]))[0][0]+1
+            tstart = _np.where(_np.isnan(MD.T[:-1])*_np.isfinite(MD.T[1:]))[0][0]-1
+            tend   = _np.where(_np.isfinite(MD.T[:-1])*_np.isnan(MD.T[1:]))[0][0]+1
         except:
             continue
-       
+
         ## Subplot data
         tits = ['Zonal Wind','Meridional Wind','Veritcal Wind','Temperature']
         xlabs = ['Wind Speed [m/s]','Wind Speed [m/s]','Wind Speed [m/s]','Temperature [K]']
@@ -1140,23 +1140,26 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         colors = ['r.-','b.-','g.-','m.-','c.-','y.-','k.-','rs-','bs-','gs-','ms-','cs-','ys-','ks-']
         colors2= ['ro-','bo-','go-','mo-']
         markerwide = 0
-        
+
         # Zonal
         # ylabel("%s %4.0f" % (_cal.month_abbr[month], year))
         axz[nsp].set_ylabel("%s" % (_cal.month_abbr[month]),labelpad=2)
         axz[nsp].set_ylim(-50, 150)
-	if UT:
-	    axz[nsp].set_xlim(tlim)
-	else:
-#        print MD.t[tstart], MD.t[tend]
-#        axz[nsp].set_xlim(MD.t[tstart],MD.t[tend])
+        if UT:
+            axz[nsp].set_xlim(tlim)
+        else:
+            #        print MD.t[tstart], MD.t[tend]
+            #        axz[nsp].set_xlim(MD.t[tstart],MD.t[tend])
             axz[nsp].set_xlim([_dt.datetime(1969,12,31,17,00,00),_dt.datetime(1970,1,1,7,0,0)])
+
         axz[nsp].set_yticks([0, 50, 100])  #[-50, 0, 50, 100]
+
         if SPLIT:
-            axz[nsp].errorbar(MD.t,MD.u,yerr=MD.uv,fmt=colors2[2],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='East') 
+            axz[nsp].errorbar(MD.t,MD.u,yerr=MD.uv,fmt=colors2[2],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='East')
             axz[nsp].errorbar(MD.t2,MD.u2,yerr=MD.u2v,fmt=colors2[3],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='West')
         else:
             axz[nsp].errorbar(MD.t+_dt.timedelta(minutes=3*(year-YEAR)),MD.u,yerr=MD.uv,fmt=colors[year-YEAR],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='Data')
+
         axz[nsp].grid(gflag)
         axz[nsp].plot([MD.t[0],MD.t[-1]],[0,0],'k--',label=None)
 
@@ -1172,13 +1175,13 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
             axm[nsp].set_xlim([_dt.datetime(1969,12,31,17,00,00),_dt.datetime(1970,1,1,7,0,0)])
         axm[nsp].set_yticks([-50, 0, 50])
         if SPLIT:
-            axm[nsp].errorbar(MD.t,MD.v,yerr=MD.vv,fmt=colors2[0],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='North') 
+            axm[nsp].errorbar(MD.t,MD.v,yerr=MD.vv,fmt=colors2[0],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='North')
             axm[nsp].errorbar(MD.t2,MD.v2,yerr=MD.v2v,fmt=colors2[1],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='South')
         else:
             axm[nsp].errorbar(MD.t+_dt.timedelta(minutes=3*(year-YEAR)),MD.v,yerr=MD.vv,fmt=colors[year-YEAR],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='Data')
         axm[nsp].grid(gflag)
         axm[nsp].plot([MD.t[0],MD.t[-1]],[0,0],'k--',label=None)
-        
+
         # Vertical
         axv[nsp].set_ylabel("%s" % (_cal.month_abbr[month]),labelpad=2)
         axv[nsp].set_ylim(-75, 75)
@@ -1193,7 +1196,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         axv[nsp].errorbar(MD.t+_dt.timedelta(minutes=3*(year-YEAR)),MD.w,yerr=MD.wv,fmt=colors[year-YEAR],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize,label='Data')
         axv[nsp].grid(gflag)
         axv[nsp].plot([MD.t[0],MD.t[-1]],[0,0],'k--',label=None)
-        
+
         # Temps
         axt[nsp].set_ylabel("%s" % (_cal.month_abbr[month]),labelpad=2)
         axt[nsp].set_ylim(600, 1200)
@@ -1207,12 +1210,12 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         axt[nsp].set_yticks([700, 800, 900, 1000, 1100])
         axt[nsp].grid(gflag)
         axt[nsp].errorbar(MD.t+_dt.timedelta(minutes=3*(year-YEAR)),MD.T,yerr=MD.Tv,fmt=colors[year-YEAR],linewidth=lwide,elinewidth=lwide,capsize=csize,markersize=msize)
-    
+
     # Finalize Plots
         axz[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) # :%M
-        axm[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) 
-        axv[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) 
-        axt[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) 
+        axm[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
+        axv[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
+        axt[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     for i,f in enumerate([fz,fm,fv,ft]):
         f.suptitle("Average %s %s" % (SITE.upper(), tits[i]), fontsize=16, fontweight='bold')
         f.subplots_adjust(hspace = 0.001)
@@ -1224,13 +1227,13 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
             f.text(0.5,0.05,'Hour [SLT]',ha='center',va='center', fontsize=13)
         f.text(0.05,0.5,xlabs[i],ha='center',va='center',rotation='vertical', fontsize=14)
         #fig.savefig("%s%s-%4.0f-%s.eps" % (dirout,title[i],YEAR,SITE))
-        
+
 
 def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_VAL=[50,100,150,200,250],VERBOSE=True):
     '''
     Summary:
         Plots monthly averages in a 2x6 month plot binning by average F10.7
-    
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         DNSTART = Datetime to start
@@ -1246,12 +1249,12 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
 
     History:
         6/13/13 -- Written by DJF (dfisher2@illinois.edu)
-    
+
     '''
     _mpl.rcParams.update({'font.size':8})
     _mpl.rcParams['savefig.dpi'] = 200
-    _mpl.rcParams['figure.figsize'] = (6,4)   
-    
+    _mpl.rcParams['figure.figsize'] = (6,4)
+
     # Set up Figures
     if len(F_VAL) == 2:
         colors= ['#0000FF','#FF0000']
@@ -1262,7 +1265,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     markerwide = 0.0001
     linewide = 1
     ms = 3
-    
+
     _plt.figure(0)
     axz={};fz,((axz[0],axz[1]),(axz[2],axz[3]),(axz[4],axz[5]), \
                (axz[6],axz[7]),(axz[8],axz[9]),(axz[10],axz[11]))  = _plt.subplots(6,2, sharex=True, sharey=False)
@@ -1275,7 +1278,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     _plt.figure(3)
     axt={};ft,((axt[0],axt[1]),(axt[2],axt[3]),(axt[4],axt[5]), \
                (axt[6],axt[7]),(axt[8],axt[9]),(axt[10],axt[11]))  = _plt.subplots(6,2, sharex=True, sharey=False)
-    
+
     # First Find F10.7 Range Bins
     f_doy_index = []
     f_yr_index = []
@@ -1285,7 +1288,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
 
     for step in range((DNEND-DNSTART).days):
         dn = DNSTART+_dt.timedelta(days=step)
-        
+
         pt = _pyglow.Point(dn,0,0,250)
         try:
             Fb = (pt.f107a+pt.f107)/2.
@@ -1294,12 +1297,12 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
             fbin = [k for k,i in enumerate(F_VAL) if pt.f107a>=i and pt.f107a-(F_VAL[1]-F_VAL[0])<i][0]
         f_doy_index[fbin].append(int((dn-_dt.datetime(dn.year,1,1)).total_seconds()/(60*60*24)+1))
         f_yr_index[fbin].append(dn.year)
-    
+
     # Get Monthly Average for basis
     for nsp,mon in enumerate(range(1,13)):
         nsp = ((nsp*2)%24 - 11*((nsp*2)%24>11))%12
         for k,(f_doy,f_yr) in enumerate(zip(f_doy_index,f_yr_index)):
-            print mon,'-',F_VAL[k]
+            print(mon,'-',F_VAL[k])
             MD = BinMonthlyData(SITE,arbdate.year,mon,DLIST=f_doy,YLIST=f_yr,SPLIT=SPLIT,KP=KP,QF=QF,VERBOSE=VERBOSE)
             #print '|_ F107b:',MD.f107,'\n\n'
             MD.t2 = MD.t + _dt.timedelta(minutes=3)
@@ -1334,7 +1337,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
                     sltoffset = - _dt.timedelta(hours=2,minutes=12)
                 else:
                     sltoffset = _dt.timedelta(minutes=0)
-                    print 'No UT/LT conversion... in UT'
+                    print('No UT/LT conversion... in UT')
             else:
                 sltoffset = _dt.timedelta(minutes=0)
             MD.t = MD.t + sltoffset
@@ -1348,7 +1351,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
             axz[nsp].set_xlim(tlim)
             axz[nsp].set_yticks([0, 100])
             if SPLIT:
-                axz[nsp].errorbar(MD.t,MD.u,yerr=MD.uv,fmt='.-',color=colors[2],linewidth=linewide,elinewidth=linewide,capsize=markerwide,label='East',markersize=ms) 
+                axz[nsp].errorbar(MD.t,MD.u,yerr=MD.uv,fmt='.-',color=colors[2],linewidth=linewide,elinewidth=linewide,capsize=markerwide,label='East',markersize=ms)
                 axz[nsp].errorbar(MD.t2,MD.u2,yerr=MD.u2v,fmt='.-',color=colors[3],linewidth=linewide,elinewidth=linewide,capsize=markerwide,label='West',markersize=ms)
             else:
                 axz[nsp].errorbar(MD.t+_dt.timedelta(minutes=tshift*k),MD.u,yerr=MD.uv,fmt='.-',color=colors[k],linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms,label='Data')
@@ -1361,7 +1364,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
             axm[nsp].set_xlim(tlim)
             axm[nsp].set_yticks([ -75, 0, 75])
             if SPLIT:
-                axm[nsp].errorbar(MD.t,MD.v,yerr=MD.vv,fmt='.-',color=colors[0],linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms,label='East') 
+                axm[nsp].errorbar(MD.t,MD.v,yerr=MD.vv,fmt='.-',color=colors[0],linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms,label='East')
                 axm[nsp].errorbar(MD.t2,MD.v2,yerr=MD.v2v,fmt='.-',color=colors[1],linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms,label='West')
             else:
                 axm[nsp].errorbar(MD.t+_dt.timedelta(minutes=tshift*k),MD.v,yerr=MD.vv,fmt='.-',color=colors[k],linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms,label='Data')
@@ -1390,7 +1393,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     s = _plt.errorbar([-2,-1],[0,0],yerr=[1,1],fmt='.-',color='b',linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms)
     m = _plt.errorbar([-2,-1],[0,0],yerr=[1,1],fmt='.-',color='g',linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms)
     l = _plt.errorbar([-2,-1],[0,0],yerr=[1,1],fmt='.-',color='r',linewidth=linewide,elinewidth=linewide,capsize=markerwide,markersize=ms)
-    
+
     if len(F_VAL) == 2:
         titles = [r'$\overline{F_{10.7}} < 125$',r'$\overline{F_{10.7}} \geq 125$']
         fz.legend([s,l],titles,bbox_to_anchor=(.15, .9, .76, .102), loc=3,ncol=2, mode="expand", borderaxespad=0.,frameon=False)
@@ -1403,7 +1406,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
         fm.legend([s,m,l],titles,bbox_to_anchor=(.15, .9, .76, .102), loc=3,ncol=2, mode="expand", borderaxespad=0.,frameon=False)
         fv.legend([s,m,l],titles,bbox_to_anchor=(.15, .9, .76, .102), loc=3,ncol=2, mode="expand", borderaxespad=0.,frameon=False)
         ft.legend([s,m,l],titles,bbox_to_anchor=(.15, .9, .76, .102), loc=3,ncol=2, mode="expand", borderaxespad=0.,frameon=False)
-       
+
     # Finalize Zonal
     #fz.suptitle("Monthly Averaged Zonal Wind from %s" % name[SITE], fontsize=12, fontweight='bold')
     fz.subplots_adjust(hspace = 0.001)
@@ -1417,7 +1420,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     axz[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) # :%M
     fz.savefig("%s%s-F107b-%s.eps" % (dirout,'Clima-Z',SITE),format='eps')
     #fz.savefig("%s%s-F107b-%s.pdf" % (dirout,'Clima-Z',SITE),format='pdf')
-    
+
     # Finalize Meridional
     #fm.suptitle("Monthly Averaged Meridional Wind from %s" % name[SITE], fontsize=12, fontweight='bold')
     fm.subplots_adjust(hspace = 0.001)
@@ -1431,7 +1434,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     axm[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) # :%M
     fm.savefig("%s%s-F107b-%s.eps" % (dirout,'Clima-M',SITE),format='eps')
     #fm.savefig("%s%s-F107b-%s.pdf" % (dirout,'Clima-M',SITE),format='pdf')
-    
+
     # Finalize Vert
     #fv.suptitle("Monthly Averaged Vertical Wind from %s" % name[SITE], fontsize=12, fontweight='bold')
     fv.subplots_adjust(hspace = 0.001)
@@ -1446,7 +1449,7 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
 
     fv.savefig("%s%s-F107b-%s.eps" % (dirout,'Clima-V',SITE),format='eps')
     #fv.savefig("%s%s-F107b-%s.pdf" % (dirout,'Clima-V',SITE),format='pdf')
-    
+
     # Finalize Temp
     #ft.suptitle("Monthly Averaged Temperature from %s" % name[SITE], fontsize=11, fontweight='bold')
     ft.subplots_adjust(hspace = 0.001)
@@ -1460,13 +1463,13 @@ def PlotClimatologyF107(SITE,DNSTART,DNEND,SPLIT=False,KP=[0,10],UT=True,QF=1,F_
     axt[0].xaxis.set_major_formatter(_md.DateFormatter('%H')) # :%M
     ft.savefig("%s%s-F107b-%s.eps" % (dirout,'Clima-T',SITE),format='eps')
     #ft.savefig("%s%s-F107b-%s.pdf" % (dirout,'Clima-T',SITE),format='pdf')
-    
-    
+
+
 def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1,QUIET=False):
     '''
     Summary:
         Plots single site at a local time w/ models
-    
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         DNSTART = datetime of start date
@@ -1483,8 +1486,8 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
     '''
     _mpl.rcParams.update({'font.size':8})
     _mpl.rcParams['savefig.dpi'] = 200
-    _mpl.rcParams['figure.figsize'] = (6,4)   
-    
+    _mpl.rcParams['figure.figsize'] = (6,4)
+
     # Set up Figures
     markerwide = 0
     linewide = 1
@@ -1505,7 +1508,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
     fv,((axv))  = _plt.subplots(h_len,1, sharex=True, sharey=False)
     _plt.figure(3)
     ft,((axt))  = _plt.subplots(h_len,1, sharex=True, sharey=False)
-    
+
     # Get LT bin
     lt = []
     dh = [t.hour+t.minute/60. for t in times]
@@ -1513,7 +1516,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
         lt.append(int(_np.argmin(abs(_np.roll(dh,b_len/2)-hr))))
     yl = []; dl = [];
     t_lim = [_dt.datetime(1969,12,31),_dt.datetime(1971,1,1)]
-    
+
     # allocate arrays for data and models
     t_len = (DNEND-DNSTART).days
     m_len = 12.  # for each month
@@ -1537,7 +1540,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
     Wea = _np.empty((m_len,h_len))*_np.nan
     Tm = {}; Um = {}; Vm = {}; Wm = {};
     if isinstance(WMODEL, str):
-        WMODEL = [WMODEL]        
+        WMODEL = [WMODEL]
     for m in WMODEL:
         Tm[m]  = _np.empty((t_len,h_len))*_np.nan
         Um[m]  = _np.empty((t_len,h_len))*_np.nan
@@ -1585,7 +1588,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
             Vea[m_ind,h_ind] = AD.vv[hr]
             Wa[m_ind,h_ind]  = AD.w [hr]
             Wea[m_ind,h_ind] = AD.wv[hr]
-            
+
 
     # Plot this stuff
     for h_ind,hr in enumerate(HOUR):
@@ -1602,7 +1605,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
         axz[h_ind].grid(gflag)
         axz[h_ind].plot(t_lim,[0,0],'k--')
 
-        # Meridional 
+        # Meridional
         axm[h_ind].set_ylabel("%02i LT" % (hr))
         axm[h_ind].set_xlim(t_lim)
         axm[h_ind].set_ylim(-150, 150)
@@ -1628,7 +1631,7 @@ def PlotLocalTime(SITE,DNSTART,DNEND,HOUR,WMODEL=[],TMODEL='msis',KP=[0,10],QF=1
         axv[h_ind].grid(gflag)
         axv[h_ind].plot(t_lim,[0,0],'k--')
 
-        # Temps 
+        # Temps
         axt[h_ind].set_ylabel("%02i LT" % (hr))
         axt[h_ind].set_xlim(t_lim)
         axt[h_ind].set_ylim(600, 1150)
@@ -1690,7 +1693,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     '''
     Summary:
         Plots single site monthly averages w/ models
-    
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         YEAR = year, e.g. 2013
@@ -1711,12 +1714,12 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     ut_offset = 0
     if not(UT):
         ut_offset = _fpiinfo.get_site_info(SITE)['Location'][1]/360.*(24*60*60)
-        
+
     # Get Monthly Average for basis
     MD = BinMonthlyData(SITE,YEAR,MONTH,SPLIT=SPLIT,KP=KP,QF=QF)
     mon = _cal.month_name[MONTH]
     MD.t  = MD.t + _dt.timedelta(seconds=ut_offset)
-    MD.t2 = MD.t + _dt.timedelta(minutes=3) 
+    MD.t2 = MD.t + _dt.timedelta(minutes=3)
 
     # Get models
     tm = {}; Tm = {}; Tem = {}; Um = {}; Uem = {}; Vm = {}; Vem = {}; Wm = {}; Wem = {};
@@ -1756,8 +1759,8 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     # Hardcoded Tmodel -- Fix
     for nm,m in enumerate(WMODEL):
         if nm == 0:
-	    _plt.fill_between(tm[m],Tm[m]-Tem[m],Tm[m]+Tem[m],alpha=0.5,linewidth=0,facecolor=facecolor['MSIS'])
-	    _plt.plot(tm[m],Tm[m],'r',label='MSIS')
+            _plt.fill_between(tm[m],Tm[m]-Tem[m],Tm[m]+Tem[m],alpha=0.5,linewidth=0,facecolor=facecolor['MSIS'])
+            _plt.plot(tm[m],Tm[m],'r',label='MSIS')
 #           _plt.errorbar(tm[m],Tm[m],yerr=Tem[m],fmt=color[nm],capsize=markerwide,label='MSIS')
     _plt.plot([MD.t[0],MD.t[-1]],[0,0],'k--')
     _plt.ylim([600,1200])
@@ -1782,7 +1785,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
 
     _plt.draw();# _plt.show()
     #_plt.savefig('%s%s_%04d-%s_temps.png' % (dirout,SITE,YEAR,mon))
-    
+
     # Winds Figure Zonal
     fig = _plt.figure(1,figsize=(10,6)); _plt.clf()
     ax = fig.add_subplot(1,1,1)
@@ -1809,19 +1812,19 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     _plt.grid()
 
     if(HIST):
-	bin_width = (MD.t[1]-MD.t[0])/4
+        bin_width = (MD.t[1]-MD.t[0])/4
         ax2 = ax.twinx()
         ax2.bar(MD.t-bin_width,MD.uc,.015,alpha=0.5,linewidth=0)
         ax2.set_ylabel('N/bin',position=(1,.1875))
-	ticklabelpad = _mpl.rcParams['xtick.major.pad']
+        ticklabelpad = _mpl.rcParams['xtick.major.pad']
         ax2.set_ylim([0,80])
-	ax2.set_yticks([0,10,20,30])
+        ax2.set_yticks([0,10,20,30])
 
     _plt.xlim([MD.t[tstart],MD.t[tend]])
 
     _plt.draw(); #_plt.show()
     _plt.savefig('%s%s_%04d-%s_zonal_winds.png' % (dirout,SITE,YEAR,mon))
-    
+
     # Winds Figure Meridional
     fig = _plt.figure(2,figsize=(10,6)); _plt.clf()
     ax = fig.add_subplot(1,1,1)
@@ -1848,7 +1851,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     _plt.grid()
 
     if(HIST):
-	bin_width = (MD.t[1]-MD.t[0])/4
+        bin_width = (MD.t[1]-MD.t[0])/4
         ax2 = ax.twinx()
         ax2.bar(MD.t-bin_width,MD.vc,.015,alpha=0.5,linewidth=0)
         ax2.set_ylabel('N/bin',position=(1,.1875))
@@ -1859,7 +1862,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
 
     _plt.draw(); #_plt.show()
     #_plt.savefig('%s%s_%04d-%s_meridional_winds.png' % (dirout,SITE,YEAR,mon))
-    
+
     # Winds Figure Vertical
     fig = _plt.figure(3,figsize=(10,6)); _plt.clf()
     ax = fig.add_subplot(1,1,1)
@@ -1880,7 +1883,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
     _plt.grid()
 
     if(HIST):
-	bin_width = (MD.t[1]-MD.t[0])/4
+        bin_width = (MD.t[1]-MD.t[0])/4
         ax2 = ax.twinx()
         ax2.bar(MD.t-bin_width,MD.wc,.015,alpha=0.5,linewidth=0)
         ax2.set_ylabel('N/bin',position=(1,.1875))
@@ -1891,7 +1894,7 @@ def PlotAverages(SITE,YEAR,MONTH,WMODEL=[],TMODEL='msis',SPLIT=False,KP=[0,10],U
 
     _plt.draw(); #_plt.show()
     #_plt.savefig('%s%s_%04d-%s_vertical_winds.png' % (dirout,SITE,YEAR,mon))
-    
+
     return(MD)
 
 
@@ -1900,7 +1903,7 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     Summary:
         Plots all raw data for one month in spaghetti plot!
         TODO: multicolor lines w/ legend or transparent blue lines...
-    
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         YEAR = year, e.g. 2013
@@ -1933,11 +1936,11 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     markerwide = 0
     lalpha = 0.1
     lw=3
-    
+
     # Get xlimits w/ data (IMPROVE)
     #tlim = [(D[0][0].allt[0]-_dt.timedelta(days=(dn-_dt.datetime(YEAR,1,1)).days+1,minutes=80)).astimezone(_utc).replace(tzinfo=None), (D[0][0].allt[-1]-_dt.timedelta(days=(dn-_dt.datetime(YEAR,1,1)).days+1,minutes=50)+_dt.timedelta(hours=1)).astimezone(_utc).replace(tzinfo=None)]
     tlim = [M.t[len(M.t)/5],M.t[-len(M.t)/5]]
- 
+
     _plt.close('all');ax={}
     # Figure
     f,(ax[0],ax[1],ax[3])  = _plt.subplots(3, sharex=True, sharey=False)
@@ -1982,7 +1985,7 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     ax[3].plot(M.t,M.T16,'r.')
     ax[3].plot(M.t,M.T84,'r.')
     '''
-    
+
     # finalize Temps
     f.subplots_adjust(hspace=0)
     ax[3].set_ylim([600,1200])
@@ -1991,7 +1994,7 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     yticks = ax[3].yaxis.get_major_ticks()
     yticks[0].label1.set_visible(False)
     yticks[-1].label1.set_visible(False)
-    
+
     # finalize Zonal
     ax[0].plot(tlim,[0,0],'k--')
     f.subplots_adjust(hspace=0)
@@ -2001,7 +2004,7 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     yticks = ax[0].yaxis.get_major_ticks()
     yticks[0].label1.set_visible(False)
     yticks[-1].label1.set_visible(False)
-    
+
     # finalize Meridional
     ax[1].plot(tlim,[0,0],'k--')
     f.subplots_adjust(hspace=0)
@@ -2011,7 +2014,7 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
     yticks = ax[1].yaxis.get_major_ticks()
     yticks[0].label1.set_visible(False)
     yticks[-1].label1.set_visible(False)
-    
+
     '''
     ax[2].plot(MR.t,MR.v)
     # finalize Vertical
@@ -2036,8 +2039,8 @@ def PlotSpaghetti(SITE,YEAR,MONTH,SPLIT=False,LIST=[],CV=False,KP=[0,10],QF=1,WI
 def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     '''
     Summary:
-        Plots all raw cardinal data for one month in 5x7 plot! 
-    
+        Plots all raw cardinal data for one month in 5x7 plot!
+
     Inputs:
         SITE = sites of interest, e.g. 'UAO'
         YEAR = year, e.g. 2013
@@ -2060,11 +2063,11 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     cs = 0
     lalpha = .3
     lw=2
-    
+
     # Get xlimits w/ data (IMPROVE)
     #tlim = [(D[0][0].allt[0]-_dt.timedelta(days=(dn-_dt.datetime(YEAR,1,1)).days+1,minutes=80)).astimezone(_utc).replace(tzinfo=None), (D[0][0].allt[-1]-_dt.timedelta(days=(dn-_dt.datetime(YEAR,1,1)).days+1,minutes=50)+_dt.timedelta(hours=1)).astimezone(_utc).replace(tzinfo=None)]
     tlim = [_dt.datetime(YEAR,1,1)-_dt.timedelta(hours=4), _dt.datetime(YEAR,1,1)+_dt.timedelta(hours=12)]
-    
+
     _plt.close('all');ax={}
     # Figure 1
     f,((ax[0],ax[1],ax[2],ax[3],ax[4],ax[5],ax[6]),(ax[7],ax[8],ax[9],ax[10],ax[11],ax[12],ax[13]),(ax[14],ax[15],ax[16],ax[17],ax[18],ax[19],ax[20]),(ax[21],ax[22],ax[23],ax[24],ax[25],ax[26],ax[27]),(ax[28],ax[29],ax[30],ax[31],ax[32],ax[33],ax[34]))  = _plt.subplots(5,7, sharex=True, sharey=True)
@@ -2110,14 +2113,14 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     try:
         ax[34].legend([(l1,m1),(l2,m2),(l3,m3),(l4,m4),(l5,m5)],['North','South','East','West','Z'],ncol=3)
     except:
-        print 'not enough data for legend...'
+        print('not enough data for legend...')
     ax[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     ax[3].set_title('%s Temperature Grid %s %04d'%(SITE,_cal.month_name[MONTH],YEAR))
     f.text(0.5, 0.04, 'Time [UT]', ha='center', va='center')
     _plt.draw();
     _plt.savefig('%s%s_GridT_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))
-            
-    # Figure 2        
+
+    # Figure 2
     ax={}; f,((ax[0],ax[1],ax[2],ax[3],ax[4],ax[5],ax[6]),(ax[7],ax[8],ax[9],ax[10],ax[11],ax[12],ax[13]),(ax[14],ax[15],ax[16],ax[17],ax[18],ax[19],ax[20]),(ax[21],ax[22],ax[23],ax[24],ax[25],ax[26],ax[27]),(ax[28],ax[29],ax[30],ax[31],ax[32],ax[33],ax[34]))  = _plt.subplots(5,7, sharex=True, sharey=True)
     # Plot Data
     for d in D:
@@ -2152,13 +2155,13 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     try:
         ax[34].legend([(l1,m1),(l2,m2)],['East','West'])
     except:
-        print 'not enough data for legend...'
+        print('not enough data for legend...')
     ax[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     ax[3].set_title('%s Zonal Wind Grid %s %04d'%(SITE,_cal.month_name[MONTH],YEAR))
     f.text(0.5, 0.04, 'Time [UT]', ha='center', va='center')
     _plt.draw();
     _plt.savefig('%s%s_GridU_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))
-            
+
     # Figure 3
     ax={};f,((ax[0],ax[1],ax[2],ax[3],ax[4],ax[5],ax[6]),(ax[7],ax[8],ax[9],ax[10],ax[11],ax[12],ax[13]),(ax[14],ax[15],ax[16],ax[17],ax[18],ax[19],ax[20]),(ax[21],ax[22],ax[23],ax[24],ax[25],ax[26],ax[27]),(ax[28],ax[29],ax[30],ax[31],ax[32],ax[33],ax[34]))  = _plt.subplots(5,7, sharex=True, sharey=True)
     # Plot Data
@@ -2194,15 +2197,15 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     try:
         ax[34].legend([(l1,m1),(l2,m2)],['North','South'])
     except:
-        print 'not enough data for legend...'
+        print('not enough data for legend...')
     ax[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     ax[3].set_title('%s Meridional Wind Grid %s %04d'%(SITE,_cal.month_name[MONTH],YEAR))
     f.text(0.5, 0.04, 'Time [UT]', ha='center', va='center')
     _plt.draw();
     _plt.savefig('%s%s_GridV_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))
-    
+
     '''
-    # Figure 4 
+    # Figure 4
     ax={};f,((ax[0],ax[1],ax[2],ax[3],ax[4],ax[5],ax[6]),(ax[7],ax[8],ax[9],ax[10],ax[11],ax[12],ax[13]),(ax[14],ax[15],ax[16],ax[17],ax[18],ax[19],ax[20]),(ax[21],ax[22],ax[23],ax[24],ax[25],ax[26],ax[27]),(ax[28],ax[29],ax[30],ax[31],ax[32],ax[33],ax[34]))  = _plt.subplots(5,7, sharex=True, sharey=True)
     # Plot Data
     for d in D:
@@ -2237,8 +2240,8 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     f.text(0.5, 0.04, 'Time [UT]', ha='center', va='center')
     _plt.draw();
     _plt.savefig('%s%s_GridW_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))
-    ''' 
-    
+    '''
+
     # Figure 5
     ax={};f,((ax[0],ax[1],ax[2],ax[3],ax[4],ax[5],ax[6]),(ax[7],ax[8],ax[9],ax[10],ax[11],ax[12],ax[13]),(ax[14],ax[15],ax[16],ax[17],ax[18],ax[19],ax[20]),(ax[21],ax[22],ax[23],ax[24],ax[25],ax[26],ax[27]),(ax[28],ax[29],ax[30],ax[31],ax[32],ax[33],ax[34]))  = _plt.subplots(5,7, sharex=True, sharey=True)
     # Plot Data
@@ -2279,22 +2282,22 @@ def PlotGridMonth(SITE,YEAR,MONTH,SPLIT=True,WIS0=False):
     try:
         ax[34].legend([(l1,m1),(l2,m2)],['CV1','CV2'])
     except:
-        print 'not enough data for legend...'
+        print('not enough data for legend...')
     ax[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     ax[3].set_title('%s CV Wind Grid %s %04d'%(SITE,_cal.month_name[MONTH],YEAR))
     f.text(0.5, 0.04, 'Time [UT]', ha='center', va='center')
     _plt.draw();
-    _plt.savefig('%s%s_GridX_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))   
+    _plt.savefig('%s%s_GridX_%04d-%02d.png'%(dirout,SITE,YEAR,MONTH))
 
 
-       
+
 
 
 def CreateL2ASCII(PROJECT,YEAR,DOY,WIS0=False):
     '''
     Summary:
         Script to save out ASCII of all L2 winds for a Project.  Filtered, w=0 assumed.
-    
+
     Inputs:
         PROJECT - Name of project for sites, ex: 'NATION'
         YEAR = year, e.g. 2013
@@ -2309,7 +2312,7 @@ def CreateL2ASCII(PROJECT,YEAR,DOY,WIS0=False):
     '''
     # Debug statment... if needed
     #print "Year-",YEAR,"Doy-",DOY
-    
+
     # Create the YYYYMMDD date format
     process_dn = _dt.datetime(YEAR,1,1) + _dt.timedelta(days = DOY-1)
     year = process_dn.strftime('%Y')
@@ -2322,12 +2325,12 @@ def CreateL2ASCII(PROJECT,YEAR,DOY,WIS0=False):
 
     # Write out ASCII
     note = open(notename,'w')
-    
+
     # Write out level 2 Data
     note.write('\nLEVEL 2 DATA PRODUCT:\n---------------------\n')
 
     note.write('Direction  Time[UTC]  Lat  Lon  Alt[km]  u[m/s]  uError[m/s]  v[m/s]  vError[m/s]  CloudDT[C]\n')
-    
+
     for x in D:
 	    for i in range(len(x.t1)):
 	        if not(x.error): # Remove bad look combo
@@ -2347,19 +2350,19 @@ def CreateL2ASCII(PROJECT,YEAR,DOY,WIS0=False):
 	            else:
 	                line = ""
 	            note.write(line)
-		    
+
     note.close()
-    
-    print 'Results saved to: ' + notename
-    print 'This is a test case, not for official L2 use'
-    
-    
+
+    print('Results saved to: ' + notename)
+    print('This is a test case, not for official L2 use')
+
+
 
 def CreateL2ASCII_Legacy(PROJECT,YEAR,DOY,QF=1,WIS0=False):
     '''
     Summary:
         Script to save out Legacy ASCII of all L2 date for a Project. [for Meriwether]
-    
+
     Inputs:
         PROJECT - Name of project for sites, ex: 'NATION'
         YEAR = year, e.g. 2013
@@ -2375,7 +2378,7 @@ def CreateL2ASCII_Legacy(PROJECT,YEAR,DOY,QF=1,WIS0=False):
     '''
     # Debug statment... if needed
     #print "Year-",YEAR,"Doy-",DOY
-    
+
     # Create the YYYYMMDD date format
     process_dn = _dt.datetime(YEAR,1,1) + _dt.timedelta(days = DOY-1)
     year = process_dn.strftime('%Y')
@@ -2389,43 +2392,43 @@ def CreateL2ASCII_Legacy(PROJECT,YEAR,DOY,QF=1,WIS0=False):
 
     # Write out ASCII
     note = open(notename,'w')
-    
+
     # Write out level 2 Data
     note.write('\nLEVEL 2 DATA PRODUCT:\n---------------------\n')
 
     note.write('Direction  Time[UTC]  Lat  Lon  T[K]  TError[K]  u[m/s]  uError[m/s]  v[m/s]  vError[m/s]  w[m/s]  wError[m/s]  Intensity  Intensity_Error  Background  Background_Error  Note\n')
-    
+
     for x in D:
         for i in range(len(x.t1)):
             if not(x.error): # Remove bad look combo
-		        dn = x.t1[i].astimezone(_utc)
-		        utctime = dn.strftime("%Y-%m-%d %H:%M:%S")
-		        if('Zenith' in x.key or 'IN' in x.key):
-		            line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  -------  ------  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.w[i], x.we[i], x.i[i], x.ie[i], x.b[i], x.be[i])
-		        elif('North' in x.key or 'South' in x.key):
-		            line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.v[i], x.ve[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
-		        elif('East' in x.key or 'West' in x.key):
-		            line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  -------  ------  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.u[i], x.ue[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
-		        elif('CV_VTI_EKU_PAR' in x.key):
-		            line = ""
-		        elif('Unknown' in x.key):
-		            line = ""
-                        # Code to add MTM Temps (REMOVE SOON)
-		        elif('MTM_Search' in x.key):
-		            line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  -------  ------  -------  ------  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.i[i], x.ie[i], x.b[i], x.be[i])
-                        elif('CV' in x.key):
-		            line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.u[i], x.ue[i], x.v[i], x.ve[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
+                dn = x.t1[i].astimezone(_utc)
+                utctime = dn.strftime("%Y-%m-%d %H:%M:%S")
+                if('Zenith' in x.key or 'IN' in x.key):
+                    line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  -------  ------  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.w[i], x.we[i], x.i[i], x.ie[i], x.b[i], x.be[i])
+                elif('North' in x.key or 'South' in x.key):
+                    line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.v[i], x.ve[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
+                elif('East' in x.key or 'West' in x.key):
+                    line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  -------  ------  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.u[i], x.ue[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
+                elif('CV_VTI_EKU_PAR' in x.key):
+                    line = ""
+                elif('Unknown' in x.key):
+                    line = ""
+                # Code to add MTM Temps (REMOVE SOON)
+                elif('MTM_Search' in x.key):
+                    line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  -------  ------  -------  ------  -------  ------  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.i[i], x.ie[i], x.b[i], x.be[i])
+                elif('CV' in x.key):
+                    line = "{:16s}  {:19s}  {:5.1f}  {:5.1f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:7.2f}  {:6.2f}  {:6.4f}  {:4.4f}  {:6.1f}  {:4.2f}\n".format(x.key, utctime, x.lla[0], x.lla[1], x.T[i], x.Te[i], x.u[i], x.ue[i], x.v[i], x.ve[i], x.wi[i], x.wie[i], x.i[i], x.ie[i], x.b[i], x.be[i])
 		        #line = "%14s  %19s  %3.1f  %3.1f  %4.2f  %2.2f  %3.2f  %2.2f  %3.2f  %2.2f  %3.2f  %2.2f  %1.3f  %1.3f  %5s  %30s" % (x.key, utctime, lat, lon, x.T[i], x.Te[i], x.u[i], x.ue[i], x.v[i], x.ve[i], x.w[i], x.we[i], x.I[i], x.Ie[i], x.cloudy[i], x.notes)
-		        note.write(line)
-		    
+                note.write(line)
+
     note.close()
-    
+
 
 def CreateMonthlyASCII(PROJECT,YEAR,MONTH,QF=1):
     '''
     Summary:
         Script to output ASCII Monthly averaged results for a project.
-    
+
     Inputs:
         PROJECT - Name of project for sites, ex: 'NATION'
         YEAR = year, e.g. 2013
@@ -2440,24 +2443,24 @@ def CreateMonthlyASCII(PROJECT,YEAR,MONTH,QF=1):
     '''
     # Debug if needed
     #print "Year-",YEAR,"Month-",MONTH
-    
+
     # Create Folder/file labels
     results_stub = '/rdata/airglow/database/L2/'
     S = _fpiinfo.get_network_info(PROJECT)
-    SITES = S.keys()
-    
+    SITES = list(S.keys())
+
     notename = results_stub + PROJECT + '_' + str(YEAR) + 'M' + str(MONTH).zfill(2) + '.txt'
 
     # Write out ASCII
     note = open(notename,'w')
-    
+
     # Write out level 3 Data
     note.write('\nLEVEL 3 MONTHLY PRODUCT:\n---------------------\n')
     note.write('Hour[UTC]  Lat  Lon  Temp[K]  Temp_Error[K]  Zonal_Wind[m/s]  Zonal_Wind_Error[m/s] Meridional_Wind[m/s]  Meridional_Wind_Error[m/s] Vertical_Wind[m/s]  Vertical_Wind_Error[m/s] \n')
-        
+
     for site in SITES:
         MD = BinMonthlyData(site,YEAR,MONTH,QF=QF,VERBOSE=False)
-        
+
         for ind,dn in enumerate(MD.t):
             #dn = MD.t[ind] #.astimezone(_utc)
             utctime = dn.strftime("%H:%M")
@@ -2465,8 +2468,8 @@ def CreateMonthlyASCII(PROJECT,YEAR,MONTH,QF=1):
             note.write(line)
 
     note.close
-    
-    
+
+
 
 class _BinnedData:
     '''
@@ -2482,7 +2485,7 @@ class _BinnedData:
         self.lla = _np.array([])
         self.key = ""
         self.f = ""
-        self.u  = _np.array([]) 
+        self.u  = _np.array([])
         self.ue = _np.array([])
         self.v  = _np.array([])
         self.ve = _np.array([])
@@ -2511,7 +2514,7 @@ class _BinnedData:
         self.rev = "??"
         self.error = False
         self.errorT = False
-        
+
     def __str__(self):
         string = ""
         string += "%11s" % "dn = "     + self.dn.strftime("%Y-%m-%d") + "\n"
@@ -2521,7 +2524,7 @@ class _BinnedData:
         string += "%11s" % "log = " + self.log + "\n"
         string += "%11s" % "notes = " + self.notes + "\n"
         return string
-        
+
     def cut(self, dn1, dn2, inds=None):
         # dn1 and dn2 are LT
 
@@ -2530,13 +2533,13 @@ class _BinnedData:
             inds = _np.where( (t1 > dn1) * (t1 < dn2) )
 
         self.length = len(inds)
-        
+
         if len(self.flag_wind) > 0:
             self.flag_wind = self.flag_wind[inds]
-            
+
         if len(self.flag_T) > 0:
             self.flag_T = self.flag_T[inds]
-            
+
         if len(self.it) > 0:
             self.it = self.it[inds]
 
@@ -2578,7 +2581,7 @@ class _BinnedData:
         return
 
     def plot(self, ):
-        
+
         _mpl.rcParams['font.family'] = 'monospace'
         xlim = [self.t[len(times)/5], self.t[-len(times)/5]]
 
@@ -2590,7 +2593,7 @@ class _BinnedData:
         _plt.clf()
 
         ax = fig.add_axes((.1,.2,.8,.7)) # left, bottom, width, height
-        
+
         if self.key is 'Daily':
             _plt.errorbar(self.t, self.u, yerr=self.ue, \
                     color='b', marker='o', label='u')
@@ -2608,7 +2611,7 @@ class _BinnedData:
         _plt.plot(xlim,[0,0],'k--')
 
         _plt.xlim( xlim )
-        _plt.ylim([-200.,200.]) 
+        _plt.ylim([-200.,200.])
         ax.xaxis.set_major_formatter(_md.DateFormatter('%H:%M'))
         fig.autofmt_xdate()
         _plt.legend()
@@ -2616,7 +2619,7 @@ class _BinnedData:
         fig.text(.1,.05,self.notes)
         datestr = self.dn.strftime("%Y-%m-%d")
         fig.text(.1,.92,"%10s, %12s, %10s" % (self.site, self.key, datestr))
-        
+
         fig.text(.7,.030, self.log)
         _plt.draw();
         _plt.show()
@@ -2629,7 +2632,7 @@ class _BinnedData:
         _plt.clf()
 
         ax = fig.add_axes((.1,.2,.8,.7)) # left, bottom, width, height
-        
+
         if 'Daily' in self.key:
             _plt.errorbar(self.t, self.T, yerr=self.Te, \
                     color='r', marker='.', label='T')
@@ -2638,7 +2641,7 @@ class _BinnedData:
                     color='r', marker='.', label='T')
 
         _plt.xlim( [self.t[len(times)/5], self.t[-len(times)/5]] )
-        _plt.ylim([500.,1200.]) 
+        _plt.ylim([500.,1200.])
         ax.xaxis.set_major_formatter(_md.DateFormatter('%H:%M'))
         fig.autofmt_xdate()
         _plt.legend()
@@ -2646,12 +2649,12 @@ class _BinnedData:
         fig.text(.1,.05,self.notes)
         datestr = self.dn.strftime("%Y-%m-%d")
         fig.text(.1,.92,"%10s, %12s, %10s" % (self.site, self.key, datestr))
-        
+
         fig.text(.7,.030, self.log)
         _plt.draw();
         _plt.show()
         return 0
-        
+
     def doabarrelroll(self):
         '''
         Summary:
@@ -2675,7 +2678,7 @@ class _BinnedData:
                     peppy = -76%360/360.
                 else:
                     peppy = 0
-                    print 'No Location Specified, assume UTC'
+                    print('No Location Specified, assume UTC')
 
         # To force data in middle of 00:00-23:59, need +/-12 UTC offset == 0.5 loc
         roll = int(round((0.5+peppy)%1*fox))
@@ -2686,7 +2689,7 @@ class _BinnedData:
             roll = -1*roll
         # Get variables in _BinnedData
         ship = dir(self)
-        
+
         # Do a barrel roll!
         self.t  = _np.roll(self.t,roll)
         for ti in range(roll):
@@ -2807,17 +2810,17 @@ def Fmodel(alt):
          3.97066263e+01,   1.66496603e+01,   5.56633141e+00,
          1.65258386e+00,   4.65893631e-01,   1.29035828e-01,
          3.56951975e-02,   9.92605253e-03])
-    
+
     else:
         I = _np.array([  1.44081159e-05,   9.37163934e-05,   3.63936919e-04,
          1.46931147e-02,   1.24256301e-01,   7.29099119e-01,
          2.92154760e+00,   5.00024489e+00,   4.64812608e+00,
          2.74066378e+00,   1.17773166e+00,   4.26615701e-01,
          1.43556192e-01,   4.63650114e-02])
-        
+
     return(I)
 
 
 if __name__=="__main__":
 
-    print "Insert Coin"
+    print("Insert Coin")

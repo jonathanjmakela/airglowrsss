@@ -18,7 +18,7 @@ def ReadTempLog_newformat(file, tz):
         dns : array of datetime object of the parsed file
         sky_temp : array of sky temperatures
         amb_temp : array of ambient temperatures
-        
+
     History:
         8/20/12 : Written by Timothy Duly (duly2@illinois.edu)
         11/17/12 : Added timezone localization (jmakela@illinois.edu)
@@ -30,7 +30,7 @@ def ReadTempLog_newformat(file, tz):
     try:
         fid = open(file,'r')
     except IOError as e:
-        print file, 'does not exist'
+        print(file, 'does not exist')
         return [],[],[]
     data = []
     for line in fid:
@@ -149,7 +149,7 @@ def ReadRawTempLog(file, tz):
             total_seconds = hour*3600. + minute*60. + second
 
             dn = local.localize(datetime(year,month,day) + timedelta(seconds=total_seconds))
-            print 'here'
+            print('here')
             dns.append(dn)
 
             ''' parse temp '''
@@ -172,7 +172,7 @@ def ReadRawTempLog(file, tz):
     sky_temp[sky_temp == -999] = float('nan') # Replace bad with nan (unknown)
 
     return dns, sky_temp, amb_temp
-    
+
 def ReadTempLog_oldformat(file,tz):
     """
     Function dns, sky_temp, amb_temp = ReadTempLog_oldformat(file)
@@ -186,18 +186,18 @@ def ReadTempLog_oldformat(file,tz):
         dns : array of datetime object of the parsed file
         sky_temp : array of sky temperatures
         amb_temp : array of ambient temperatures
-        
+
     History:
         11/29/12 : Written by Timothy Duly (duly2@illinois.edu)
     """
 
     # Get the local timezone
     local = pytz.timezone(tz)
-    
+
     try:
         fid = open(file,'r')
     except IOError as e:
-        print file, 'does not exist'
+        print(file, 'does not exist')
         return [],[],[]
 
     data = []
@@ -226,18 +226,18 @@ def ReadTempLog_oldformat(file,tz):
             second = int(second)
 
             dns.append( local.localize(datetime(year,month,day,hour,minute,second)) )
-            
+
             mess = line[10]
             sky = float(line[3])
             amb = float(line[4])
             sky_temp.append( sky )
             amb_temp.append( amb )
-            
+
     # Finally, make numpy arrays:
     dns = np.array(dns)
     sky_temp = np.array(sky_temp)
     amb_temp = np.array(amb_temp)
-    
+
     sky_temp[sky_temp == -998] = float('nan') # replace bad values with NaNs
 
     return dns, sky_temp, amb_temp
@@ -254,10 +254,10 @@ def DetermineIfOldFormat(file):
 
 def ReadTempLog(file,tz):
     try:
-	with open(file) as f: pass
+        with open(file) as f: pass
     except:
     	return ([],[],[])
-	
+
     if DetermineIfOldFormat(file):
         #print "old format"
         dns, sky_temp, amb_temp = ReadTempLog_oldformat(file,tz)
@@ -273,13 +273,13 @@ def BoltwoodReduce(file,dn):
     BoltwoodReduce(file,dn)
 
     currently only old format is supported (maybe?)
-    
+
     12/20/12 -- Timothy Duly (duly2@illinois.edu)
     """
     fid = open(file,'r')
     out_file_name = "%s%02d%02d_dailytemp.txt" % (dn.year, dn.month, dn.day)
     fid_out = open(out_file_name,'w')
-        
+
     for line in fid:
         data = line.split()
         if data[0] not in 'Date':
@@ -290,14 +290,14 @@ def BoltwoodReduce(file,dn):
             dn_line = datetime(year, month, day)
             if dn == dn_line:
                 fid_out.write(line)
-    print "created daily temp log: %s" % (out_file_name)
+    print("created daily temp log: %s" % (out_file_name))
     fid.close()
     fid_out.close()
-    
-    
+
+
 if __name__ == '__main__':
     #dns, sky_temp, amb_temp = ReadRawTempLog("/Users/duly/data/FPIData/temps/Cloud_raw.txt")
-    
+
     #file1 = "/Users/duly/data/FPIData/temps/clarity_log.txt"
     #dns, sky_temp, amb_temp = ReadTempLog(file1,'US/Eastern')
 
@@ -311,9 +311,3 @@ if __name__ == '__main__':
     dns2, sky_temp2, amb_temp2 = ReadRawTempLog(file2,'US/Eastern')
 
     #data = ReadRawTempLog(file1,'US/Eastern')
-
-
-
-
-
-

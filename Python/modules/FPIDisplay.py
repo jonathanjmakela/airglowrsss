@@ -39,9 +39,9 @@ def MonthlySummary(site_name, year, month):
 #	Written on 29 January 2015 by Jonathan J. Makela (jmakela@illinois.edu)
 
     from pyglow import pyglow
-    
+
     # Reduce the font size for the x-axis and set the output to be standard paper size
-    matplotlib.rc('xtick', labelsize=8) 
+    matplotlib.rc('xtick', labelsize=8)
 
     site = fpiinfo.get_site_info(site_name)
 
@@ -56,15 +56,15 @@ def MonthlySummary(site_name, year, month):
 
     # Determines files to be averaged
     f = glob.glob('/rdata/airglow/fpi/results/%s_%s_%04d%02d*.npz' % (instrument,site_name,year,month))
-    
+
     # Calculate sunrise and sunset time
-    npzfile = np.load(f[-1])
+    npzfile = np.load(f[-1], allow_pickle=True, encoding='latin1')
     d = npzfile['FPI_Results'].ravel()[0]
     del npzfile.f
     npzfile.close()
     psst = ephem.Date(obs.previous_setting(ephem.Sun(), start=d['sky_times'][0].astimezone(pytz.utc))).datetime()
     nsrt = ephem.Date(obs.next_rising(ephem.Sun(), start=d['sky_times'][0].astimezone(pytz.utc))).datetime()
-    
+
 #    t0 = psst.hour - 1
 #    t1 = nsrt.hour + 1
     t0 = psst.replace(tzinfo=pytz.utc).astimezone(sitetz).hour - 1
@@ -73,11 +73,11 @@ def MonthlySummary(site_name, year, month):
 
     if t0 > t1:
         t1 = t1+24
-    
+
     bins = np.arange(t0,t1,0.5)
     if bins[0] < 12:
         bins = bins+24.
-    
+
     center_time, (bin_T, bin_eT), (bin_U, bin_eU), (bin_U2, bin_eU2), (bin_V, bin_eV), (bin_V2, bin_eV2) = FPI.average_data(f, bins=bins)
 
     rcParams['figure.figsize']= 8.5,11
@@ -127,7 +127,7 @@ def MonthlySummary(site_name, year, month):
         # Append the next file
         files.append('/rdata/airglow/fpi/results/%s_%s_%s.npz' % (instrument, site_name, dn.strftime('%Y%m%d')))
 
-        ugraph = subplot2grid(grid_size, (mod(dn.day-1,span)+1, 0), rowspan=1, colspan=1)            
+        ugraph = subplot2grid(grid_size, (mod(dn.day-1,span)+1, 0), rowspan=1, colspan=1)
         vgraph = subplot2grid(grid_size, (mod(dn.day-1,span)+1, 1), rowspan=1, colspan=1)
         wgraph = subplot2grid(grid_size, (mod(dn.day-1,span)+1, 2), rowspan=1, colspan=1)
         bgraph = subplot2grid(grid_size, (mod(dn.day-1,span)+1, 3), rowspan=1, colspan=1)
@@ -136,7 +136,7 @@ def MonthlySummary(site_name, year, month):
 
             try:
                 # Calculate sunrise and sunset time
-                npzfile = np.load(files[-1])
+                npzfile = np.load(files[-1], allow_pickle=True, encoding='latin1')
                 d = npzfile['FPI_Results'].ravel()[0]
                 del npzfile.f
                 npzfile.close()
@@ -295,7 +295,7 @@ def MonthlySummary(site_name, year, month):
 
         for f in files:
             if os.path.isfile(f):
-                npzfile = np.load(f)
+                npzfile = np.load(f, allow_pickle=True, encoding='latin1')
                 d = npzfile['FPI_Results'].ravel()[0]
                 del npzfile.f
                 npzfile.close()
@@ -332,14 +332,14 @@ def MonthlySummary(site_name, year, month):
 
     # Save the last page
     tight_layout()
-    pdf_pages.savefig(fig)        
+    pdf_pages.savefig(fig)
     pdf_pages.close()
 
 def NetworkSummary(network, times, bin_time = np.arange(17,32,0.5),
                 Tmin=500, Tmax=1500, Dmin=-200, Dmax=200, Imin=0, Imax=200, cloudy_temperature=-15.0,
                 reference='laser'):
 #
-# Function to display a two dimensional summary of data.  The 
+# Function to display a two dimensional summary of data.  The
 # y-axis is hours while the x-axis is the day.  The function
 # stacks data in columns so daily/seasonal trends can be observed
 #
@@ -391,15 +391,15 @@ def NetworkSummary(network, times, bin_time = np.arange(17,32,0.5),
         L2data = FPIprocessLevel2.GetLevel2('renoir',datetime.datetime(t.year,t.month,t.day))
 
         doy = (t-dates.num2date(times[0])).days
-        
+
         zonal_t = []
         zonal_u = []
         zonal_ue = []
-        
+
         meridional_t = []
         meridional_v = []
         meridional_ve = []
-        
+
         for look in L2data:
             # TODO: ALLOW USER TO CHOSE WHAT DIRECTIONS TO INCLUDE IN WHAT CALCULATION
             if('zenith' in str.lower(look.key)):
@@ -408,16 +408,16 @@ def NetworkSummary(network, times, bin_time = np.arange(17,32,0.5),
                     (bin_T, bin_eT) = FPI.bin_and_mean(look.t1,look.T,look.Te,bin_time)
                     all_T[:,doy-1] = bin_T
                     all_eT[:,doy-1] = bin_eT
-                    
+
                     # Bin the intensity data
                     (bin_I, bin_eI) = FPI.bin_and_mean(look.t1,look.i,look.ie,bin_time)
-            
+
                     # Save to array
                     all_I[:,doy-1] = bin_I
                     all_eI[:,doy-1] = bin_eI
-            
+
                     (bin_dop, bin_edop) = FPI.bin_and_mean(look.t1,look.w,look.we,bin_time)
-            
+
                     # Save to array
                     all_W[:,doy-1] = bin_dop
                     all_eW[:,doy-1] = bin_edop
@@ -427,7 +427,7 @@ def NetworkSummary(network, times, bin_time = np.arange(17,32,0.5),
                     zonal_t.extend(look.t1)
                     zonal_u.extend(look.u)
                     zonal_ue.extend(look.ue)
-                    
+
             if 'north' in str.lower(look.key) or 'south' in str.lower(look.key) or 'cv' in str.lower(look.key):
                 if(len(look.v) > 0):
                     meridional_t.extend(look.t1)
@@ -440,22 +440,22 @@ def NetworkSummary(network, times, bin_time = np.arange(17,32,0.5),
             zonal_u = np.array(zonal_u)
             zonal_ue = np.array(zonal_ue)
             (bin_dop, bin_edop) = FPI.bin_and_mean(zonal_t,zonal_u,zonal_ue,bin_time)
-                
+
             # Save to array
             all_U[:,doy-1] = bin_dop
             all_eU[:,doy-1] = bin_edop
-            
+
         # Bin all meridional measurements for this date
         if(len(meridional_t) > 0):
             meridional_t = np.array(meridional_t)
             meridional_v = np.array(meridional_v)
             meridional_ve = np.array(meridional_ve)
             (bin_dop, bin_edop) = FPI.bin_and_mean(meridional_t,meridional_v,meridional_ve,bin_time)
-                
+
             # Save to array
             all_V[:,doy-1] = bin_dop
             all_eV[:,doy-1] = bin_edop
-                    
+
     # Formatter for the local time axis
     def LT(x, pos):
         return ('%02d' % (np.mod(x,24)))
@@ -619,7 +619,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
                 Tmin=500, Tmax=1500, Dmin=-200, Dmax=200, Imin=0, Imax=200, cloudy_temperature=-15.0,
                 reference='Zenith'):
 #
-# Function to display a two dimensional summary of data.  The 
+# Function to display a two dimensional summary of data.  The
 # y-axis is hours while the x-axis is the day.  The function
 # stacks data in columns so daily/seasonal trends can be observed
 #
@@ -669,7 +669,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
     # Work with the data from the files provided
     for f in files:
         # Load the file
-        npzfile = np.load(f)
+        npzfile = np.load(f, allow_pickle=True, encoding='latin1')
 
         # Save data to FPI_Results and site dictionaries
         FPI_Results = npzfile['FPI_Results']
@@ -685,7 +685,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
         doy = (FPI_Results['sky_times'][0]-dates.num2date(times[0])).days
         if (doy < 1) or (doy > N):
             continue
-        
+
         # Find the zero offset of the Doppler shift
         (ref_Dop, e_ref_Dop) = FPI.DopplerReference(FPI_Results,reference=reference)
 
@@ -701,7 +701,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
 
         # Remove outliers
         ind = abs(w) < 200.
-        
+
         if sum(ind) <= 1:
             # No good data, just use all ind
             ind = abs(w) > 0.
@@ -713,7 +713,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
         w2 = interpolate.interp1d(dt[ind],w[ind],bounds_error=False,fill_value=0.0)
         sigma_w2 = interpolate.interp1d(dt[ind],sigma_w[ind],bounds_error=False,fill_value=0.0)
         dt = []
-        
+
         for x in FPI_Results['sky_times']:
             diff = (x - FPI_Results['sky_times'][0])
             dt.append(diff.seconds+diff.days*86400.)
@@ -738,7 +738,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
                 edop = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2+sigma_w[ind]**2)
 
                 # Check if clouds are provided
-                if 'Clouds' in FPI_Results.keys():
+                if 'Clouds' in list(FPI_Results.keys()):
                     if FPI_Results['Clouds'] is not None:
                         clouds = FPI_Results['Clouds']['mean'][ind]
                         idx = clouds < cloudy_temperature
@@ -793,7 +793,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
                 edop = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2+sigma_w[ind]**2)
 
                 # Check if clouds are provided
-                if 'Clouds' in FPI_Results.keys():
+                if 'Clouds' in list(FPI_Results.keys()):
                     if FPI_Results['Clouds'] is not None:
                         clouds = FPI_Results['Clouds']['mean'][ind]
                         idx = clouds < cloudy_temperature
@@ -827,7 +827,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
                 edop = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2+sigma_w[ind]**2)
 
                 # Check if clouds are provided
-                if 'Clouds' in FPI_Results.keys():
+                if 'Clouds' in list(FPI_Results.keys()):
                     if FPI_Results['Clouds'] is not None:
                         clouds = FPI_Results['Clouds']['mean'][ind]
                         idx = clouds < cloudy_temperature
@@ -892,7 +892,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
     masked_U = ma.masked_where((np.isnan(all_U)) | (all_eU > 25) | (all_U > Dmax*2), all_U)
 
     # Plot the data
-    mappable_U = Zonal_Ax.pcolormesh(times,center_time,masked_U,vmin=Dmin,vmax=Dmax)
+    mappable_U = Zonal_Ax.pcolormesh(times,center_time,masked_U,vmin=Dmin,vmax=Dmax,cmap='RdBu')
 
     # Fix y-axis labels
     Zonal_Ax.set_ylim(center_time[0],center_time[-1])
@@ -922,7 +922,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
     masked_V = ma.masked_where((np.isnan(all_V)) | (all_eV > 25) | (all_V > Dmax*2), all_V)
 
     # Plot the data
-    mappable_V = Meridional_Ax.pcolormesh(times,center_time,masked_V,vmin=Dmin,vmax=Dmax)
+    mappable_V = Meridional_Ax.pcolormesh(times,center_time,masked_V,vmin=Dmin,vmax=Dmax,cmap='RdBu')
 
     # Fix y-axis labels
     Meridional_Ax.set_ylim(center_time[0],center_time[-1])
@@ -954,7 +954,7 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
     masked_W = ma.masked_where((np.isnan(all_W)) | (all_eW > 25) | (all_W > Dmax*2), all_W)
 
     # Plot the data
-    mappable_W = Vertical_Ax.pcolormesh(times,center_time,masked_W,vmin=Dmin,vmax=Dmax)
+    mappable_W = Vertical_Ax.pcolormesh(times,center_time,masked_W,vmin=Dmin,vmax=Dmax,cmap='RdBu')
 
     # Fix y-axis labels
     Vertical_Ax.set_ylim(center_time[0],center_time[-1])
@@ -1010,8 +1010,8 @@ def DataSummary(files, times, bin_time = np.arange(17,32,0.5),
 def PlotDay(f, full_clear=-30, full_cloud=-20,
             Tmin=300, Tmax=1500, Dmin=-200, Dmax=200,
             reference='laser',directions=None,
-	    Temperature_Fig = None, Temperature_Graph = None, Doppler_Fig = None, Doppler_Graph = None,
-        cull=False):
+            Temperature_Fig = None, Temperature_Graph = None, Doppler_Fig = None, Doppler_Graph = None,
+            cull=False):
 #
 # Function to plot a single night's data for a single station
 #
@@ -1030,21 +1030,21 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
 #   Removed zenith_times argument (bjh)
 
     # Read in the file
-    npzfile = np.load(f)
+    npzfile = np.load(f, allow_pickle=True, encoding='latin1')
     FPI_Results = npzfile['FPI_Results']
     FPI_Results = FPI_Results.reshape(-1)[0]
     site = npzfile['site']
     site = site.reshape(-1)[0]
     del npzfile.f # http://stackoverflow.com/questions/9244397/memory-overflow-when-using-numpy-load-in-a-loop
     npzfile.close()
-    
+
     # Assign markers and colors to Direction keys in a reasonable way.
-    # All "similiar" direction keys should get the same marker, 
+    # All "similiar" direction keys should get the same marker,
     # but different colors. (CV_ANN_UAO_1 and IN_ANN_UAO are "similiar")
     all_markers = ['s', 'd', '^', 'x', 'p', '*', '+', 'v', '>', '<']
     all_colors  = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
     all_markers.reverse() # pop() starts from the end
-    all_colors.reverse() 
+    all_colors.reverse()
     fmt = { 'East': {'Color': 'y', 'Marker': 'o'},
             'West': {'Color': 'm', 'Marker': 'o'},
             'North': {'Color': 'r', 'Marker': 'o'},
@@ -1052,7 +1052,7 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
             'Zenith': {'Color': 'k', 'Marker': 'o'},
             'Laser' : None
         }
-    cvs = [d for d in site['Directions'].keys() if d not in fmt] # e.g., ['CV_ANN_UAO_1', 'IN_EKU_UAO', etc.]
+    cvs = [d for d in list(site['Directions'].keys()) if d not in fmt] # e.g., ['CV_ANN_UAO_1', 'IN_EKU_UAO', etc.]
     keys = list(set((['_'.join(c.split('_')[1:3]) for c in cvs]))) # e.g., ['ANN_UAO', 'EKU_UAO'] (no repeats)
     # make a unique marker for each key, and vary the color
     keymap = {}
@@ -1066,19 +1066,16 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
         # assign the color and marker
         fmt[direc] = {'Color': colors.pop(), 'Marker': mark} # vary the color, keep the marker
 
-            
-    
-    
     if Temperature_Fig is None:
-	# Add Temperature figure
-   	Temperature_Fig = plt.figure()
-    	Temperature_Graph = Temperature_Fig.add_subplot(111)
+        # Add Temperature figure
+        Temperature_Fig = plt.figure()
+        Temperature_Graph = Temperature_Fig.add_subplot(111)
 
     if Doppler_Fig is None:
         # Add Doppler figure
         Doppler_Fig = plt.figure()
         Doppler_Graph = Doppler_Fig.add_subplot(111)
-        
+
     (ref_Dop, e_ref_Dop) = FPI.DopplerReference(FPI_Results,reference=reference)
 
     # Calculate the vertical wind and interpolate it
@@ -1105,7 +1102,7 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
     w2 = interpolate.interp1d(dt[ind],w[ind],bounds_error=False,fill_value=0.0)
     sigma_w2 = interpolate.interp1d(dt[ind],sigma_w[ind],bounds_error=False,fill_value=0.0)
     dt = []
-    
+
     for x in FPI_Results['sky_times']:
         diff = (x - FPI_Results['sky_times'][0])
         dt.append(diff.seconds+diff.days*86400.)
@@ -1118,10 +1115,10 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
         l = [x for x in np.unique(FPI_Results['direction']) if x not in ['Unknown', 'Laser'] ]
     else:
         l = directions
-        
+
     for x in l:
         ind = FPI.all_indices(x,FPI_Results['direction'])
-        
+
         # Inital plot of bogus value to get the legend right
         Temperature_Graph.plot(-999,-999,color=fmt[x]['Color'], marker=fmt[x]['Marker'], label=x)
 
@@ -1133,18 +1130,18 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
             Doppler_Error = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2+sigma_w[ind]**2)
         if x == 'South' or x == 'West':
             Doppler_Wind = -Doppler_Wind
-            
+
         Doppler_Graph.plot(FPI_Results['sky_times'][ind],Doppler_Wind,color=fmt[x]['Color'],alpha=0.3,marker=None,label='_nolegend_')
         Doppler_Graph.plot(-999,-999,color=fmt[x]['Color'],marker=fmt[x]['Marker'],label=x)
-        
-	if ('Clouds' in FPI_Results.keys()) is False:
-		FPI_Results['Clouds'] = None
+
+        if ('Clouds' in list(FPI_Results.keys())) is False:
+            FPI_Results['Clouds'] = None
 
 
         # Loop through each point (needed to be done this way to allow setting
         # the alpha value for each individual point)
         for (t,y,ey,z,ez,wq,tq) in zip(FPI_Results['sky_times'][ind], FPI_Results['T'][ind], FPI_Results['sigma_T'][ind],Doppler_Wind,Doppler_Error,FPI_Results['wind_quality_flag'][ind],FPI_Results['temp_quality_flag'][ind]):
-        
+
             # Calculate the alpha value to be used for this point, based on quality flag
             w_alpha_val = 1.
             t_alpha_val = 1.
@@ -1161,11 +1158,11 @@ def PlotDay(f, full_clear=-30, full_cloud=-20,
             Doppler_Graph.errorbar(t,z,yerr=ez,alpha=w_alpha_val,color=fmt[x]['Color'],fmt=fmt[x]['Marker'],label='_nolegend_')
 
     # Plotting font setup
-    fontP = FontProperties() 
+    fontP = FontProperties()
     fontP.set_size('10')
     fontsize = 10 # because legend() and xlabel() do it different ways
-    
-    # Format the Temperature plot               
+
+    # Format the Temperature plot
     Temperature_Graph.set_ylim(Tmin,Tmax)
     Temperature_Graph.set_xlim(FPI_Results['sky_times'][0],FPI_Results['sky_times'][-1])
     Temperature_Graph.legend(ncol=4, prop=fontP)
@@ -1229,20 +1226,20 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
 #       information doesn't seem like it should belong to the instrument.
 
     # Assign markers and colors to Direction keys in a reasonable way.
-    # All "similiar" direction keys should get the same marker, 
+    # All "similiar" direction keys should get the same marker,
     # but different colors. (CV_ANN_UAO_1 and IN_ANN_UAO are "similiar")
     all_markers = ['s', 'd', '^', 'x', 'p', '*', '+', 'v', '>', '<']
     all_colors  = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
     all_markers.reverse() # pop() starts from the end
-    all_colors.reverse() 
+    all_colors.reverse()
 
     # start and stop time of entire dataset
     t0 = None
     t1 = None
-    
+
     for f in files:
         # Read in the file
-        npzfile = np.load(f)
+        npzfile = np.load(f, allow_pickle=True, encoding='latin1')
         FPI_Results = npzfile['FPI_Results']
         FPI_Results = FPI_Results.reshape(-1)[0]
         site = npzfile['site']
@@ -1262,20 +1259,20 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
             Doppler_Fig = plt.figure()
             Doppler_Graph = Doppler_Fig.add_subplot(111)
 
-	if len(all_colors) == 0:
+        if len(all_colors) == 0:
             all_markers = ['s', 'd', '^', 'x', 'p', '*', '+', 'v', '>', '<']
             all_colors  = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
             all_markers.reverse() # pop() starts from the end
-	    all_colors.reverse()
+            all_colors.reverse()
 
         fmt = {'Color': all_colors.pop(), 'Marker': all_markers.pop()}
-                
+
         (ref_Dop, e_ref_Dop) = FPI.DopplerReference(FPI_Results,reference=reference)
 
         # Calculate the vertical wind and interpolate it
         ind = FPI.all_indices('Zenith',FPI_Results['direction'])
         ##w = -1. * (FPI_Results['LOSwind'][ind]-ref_Dop[ind]) # -1 because LOS is towards instrument
-	w = (FPI_Results['LOSwind'][ind]-ref_Dop[ind]) # LOS is away from instrument
+        w = (FPI_Results['LOSwind'][ind]-ref_Dop[ind]) # LOS is away from instrument
         sigma_w = FPI_Results['sigma_LOSwind'][ind]
         dt = []
         for x in FPI_Results['sky_times'][ind]:
@@ -1297,7 +1294,7 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
         w2 = interpolate.interp1d(dt[ind],w[ind],bounds_error=False,fill_value=0.0)
         sigma_w2 = interpolate.interp1d(dt[ind],sigma_w[ind],bounds_error=False,fill_value=0.0)
         dt = []
-        
+
         for x in FPI_Results['sky_times']:
             diff = (x - FPI_Results['sky_times'][0])
             dt.append(diff.seconds+diff.days*86400.)
@@ -1310,7 +1307,7 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
             l = [x for x in np.unique(FPI_Results['direction']) if x not in ['Unknown', 'Laser'] ]
         else:
             l = directions
-            
+
         for x in l:
             ind = FPI.all_indices(x,FPI_Results['direction'])
 
@@ -1324,12 +1321,12 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
                     t0 = temp0
                 if temp1 > t1:
                     t1 = temp1
-                    
+
             # Inital plot of bogus value to get the legend right
             Temperature_Graph.plot(-999,-999,color=fmt['Color'], marker=fmt['Marker'], label='%s, %s' % (inst_name,x))
 
-	    if x == 'Zenith':
-		Doppler_Wind = (FPI_Results['LOSwind'][ind]-ref_Dop[ind])
+            if x == 'Zenith':
+                Doppler_Wind = (FPI_Results['LOSwind'][ind]-ref_Dop[ind])
                 Doppler_Error = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2)
             else:
                 Doppler_Wind = (FPI_Results['LOSwind'][ind]-ref_Dop[ind]-w[ind]*np.cos(FPI_Results['ze'][ind]*np.pi/180.))/np.sin(FPI_Results['ze'][ind]*np.pi/180.)
@@ -1345,22 +1342,21 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
 #                Doppler_Error = np.sqrt(FPI_Results['sigma_LOSwind'][ind]**2+sigma_w[ind]**2)
 #            if x == 'North' or x == 'East':
 #                Doppler_Wind = -Doppler_Wind
-                
+
 #            Doppler_Graph.plot(FPI_Results['sky_times'][ind],Doppler_Wind,color=fmt['Color'],alpha=0.3,marker=None,label='_nolegend_')
             Doppler_Graph.plot(-999,-999,color=fmt['Color'],marker=fmt['Marker'],label='%s, %s' % (inst_name,x))
-            
-            if ('Clouds' in FPI_Results.keys()) is False:
+
+            if ('Clouds' in list(FPI_Results.keys())) is False:
                     FPI_Results['Clouds'] = None
 
             if FPI_Results['Clouds'] is None:
                 # No cloud data so create plot without alpha
                 for (t,y,ey,z,ez) in zip(FPI_Results['sky_times'][ind], FPI_Results['T'][ind], FPI_Results['sigma_T'][ind],Doppler_Wind,Doppler_Error):
-
-		    if (ez < 10.) and (abs(z) < 200.):
-			if displayhours:
-			    t = (t.hour * 3600 + t.minute * 60 + t.second)/3600.
-			    if t > 18:
-				t = t-24.
+                    if (ez < 10.) and (abs(z) < 200.):
+                        if displayhours:
+                            t = (t.hour * 3600 + t.minute * 60 + t.second)/3600.
+                            if t > 18:
+                                t = t-24.
 
                         # Plot the points and error bars on the graphs
                         Temperature_Graph.errorbar(t,y,yerr=ey,color=fmt['Color'],fmt=fmt['Marker'],label='_nolegend_')
@@ -1369,21 +1365,21 @@ def CompareData(files, full_clear=-30, full_cloud=-20,
                 # Loop through each point (needed to be done this way to allow setting
                 # the alpha value for each individual point)
                 for (t,y,ey,z,ez,sky_temp) in zip(FPI_Results['sky_times'][ind], FPI_Results['T'][ind], FPI_Results['sigma_T'][ind],Doppler_Wind,Doppler_Error,FPI_Results['Clouds']['mean'][ind]):
-                
+
                     # Calculate the alpha value to be used for this point.  Scaled linearly
                     # between [.1,1] corresponding to a sky temp range of [full_cloud, full_clear]
                     alpha_val = 1-max(0,min(((sky_temp-full_clear)/(full_cloud-full_clear)),.9))
-                
+
                     # Plot the points and error bars on the graphs
                     Temperature_Graph.errorbar(t,y,yerr=ey,alpha=alpha_val,color=fmt['Color'],fmt=fmt['Marker'],label='_nolegend_')
                     Doppler_Graph.errorbar(t,z,yerr=ez,alpha=alpha_val,color=fmt['Color'],fmt=fmt['Marker'],label='_nolegend_')
 
     # Plotting font setup
-    fontP = FontProperties() 
+    fontP = FontProperties()
 #    fontP.set_size('10')
 #    fontsize = 18 # because legend() and xlabel() do it different ways
-    
-    # Format the Temperature plot               
+
+    # Format the Temperature plot
     Temperature_Graph.set_ylim(Tmin,Tmax)
     if displayhours:
         t0 = np.floor((t0.hour * 3600 + t0.minute * 60 + t0.second)/3600.) - 24.
@@ -1454,10 +1450,10 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
         m.drawcoastlines()
         #m.fillcontinents(alpha=.5)
         m.drawstates()
-        
+
         # Define the q vector as None (needed below in case no values are found)
         q = None
-        
+
         for site in sites:
             # Find out the cloud status at this site at this time
             if np.size(sites[site]['bw_date']) > 0:
@@ -1465,7 +1461,7 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
                 sky_temp = sites[site]['bw_sky'][(sites[site]['bw_date'] == closest).nonzero()][0]
             else:
                 sky_temp = -999
-                        
+
             # convert to map projection coords.
             # Note that lon,lat can be scalars, lists or numpy arrays.
             xpt,ypt = m(sites[site]['lon'],sites[site]['lat'])
@@ -1475,22 +1471,22 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
                 m.plot(xpt,ypt,'bo')  # plot a blue dot there
             else:
                 m.plot(xpt,ypt,'bx')
-                
+
             # put some text next to the dot, offset a little bit
             # (the offset is in map projection coordinates)
             plt.text(xpt+50000,ypt+50000,'%s' % (site))
 
             # Load a npz file with processed data and read required variables
-            npzfile = np.load(sites[site]['fname'])
+            npzfile = np.load(sites[site]['fname'], allow_pickle=True, encoding='latin1')
             FPI_Results = npzfile['FPI_Results']
             FPI_Results = FPI_Results.reshape(-1)[0]
-            
+
             direction = []
             cmin = 500
             cmax = 1200
             dmin = -200
             dmax = 200
-            
+
             xt,yt = m(0,0)
             m.scatter(xt,yt,c=500,s=250,vmin=cmin,vmax=cmax, edgecolor='none')
 
@@ -1500,7 +1496,7 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
             # Grab times, convert to decimal hour
             zt_h = FPI.dt2h(FPI_Results['sky_times'][ind])
             all_h = FPI.dt2h(FPI_Results['sky_times'])
-    
+
             # Grab the zenith Doppler values
             z = FPI_Results['LOSwind'][ind]
 
@@ -1513,7 +1509,7 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
             for x in np.unique(FPI_Results['direction']):
                 if x != 'Unknown':
                     ind = FPI.all_indices(x,FPI_Results['direction'])
-                    
+
                     # Find times within 15 minutes of a requested time
                     lt = FPI_Results['sky_times'][ind]
 
@@ -1535,13 +1531,13 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
 
                     # Calculate the average values within the window
                     if ind.any():
-                        
+
                         if sum(ind == True) > 1:
                             if MapTemperatures:
-                                print Temperature[ind]
-                                print abs(1/e_Temperature[ind])
+                                print(Temperature[ind])
+                                print(abs(1/e_Temperature[ind]))
                                 myTemperature, eMyTemperature = FPI.weighted_avg_and_std(Temperature[ind], abs(1/e_Temperature[ind]))
-                        
+
                             if MapDopplers:
                                 myDoppler, eMyDoppler = FPI.weighted_avg_and_std(Doppler[ind], abs(1/e_Doppler[ind]))
                         else:
@@ -1600,8 +1596,8 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
                             else:
                                 myDoppler = -999
                                 Dalpha = 0.0
-                    
-                    # The location at which to plot the current data                    
+
+                    # The location at which to plot the current data
                     lon = sites[site]['LookDirection'][x][1]
                     lat = sites[site]['LookDirection'][x][0]
 
@@ -1615,20 +1611,20 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
                         if (x == 'East' or x == 'West') and (myDoppler != -999):
                             u = myDoppler
                             v = 0
-                    
+
                             # Draw quivers
                             q = m.quiver(xpt,ypt,u,v,angles='uv',scale=1000, color='black',alpha=Dalpha)
                         elif (x == 'North' or x == 'South') and (myDoppler != -999):
                             u = 0
                             v = myDoppler
-                    
+
                             # Draw quivers
                             q = m.quiver(xpt,ypt,u,v,angles='uv',scale=1000, color='black',alpha=Dalpha)
 
         cb = m.colorbar()
         cb.set_alpha(1)
         cb.set_label('[K]')
-            
+
         if q is not None:
             x,y = m(-77.0,31.0)
             p = plt.quiverkey(q,x,y,50,"50 m/s",coordinates='data',color='r')
@@ -1639,7 +1635,7 @@ def Map(sites,m,times,MapTemperatures=False, MapDopplers=False, avg_time=15, tit
         # labels = [left,right,top,bottom]
         parallels = np.arange(0.,81,5.)
         m.drawparallels(parallels,labels=[True,False,False,True])
-        
+
         meridians = np.arange(-100.,-60.,5.)
         m.drawmeridians(meridians,labels=[True,False,False,True])
 
@@ -1666,11 +1662,11 @@ def DisplayRaw(f, cmin=None, cmax=None):
 
     d = FPI.ReadIMG(f)
 
-    print 'Filename: %s' % f
-    print 'Exposure time: %.1f s' % d.info['ExposureTime']
-    print 'CCD Temperature: %.1f C' % d.info['CCDTemperature']
-    print 'SkyScanner Direction (az, ze): (%.1f, %.1f)' % (d.info['azAngle'], d.info['zeAngle'])
-    
+    print('Filename: %s' % f)
+    print('Exposure time: %.1f s' % d.info['ExposureTime'])
+    print('CCD Temperature: %.1f C' % d.info['CCDTemperature'])
+    print('SkyScanner Direction (az, ze): (%.1f, %.1f)' % (d.info['azAngle'], d.info['zeAngle']))
+
     p = plt.matshow(np.reshape(d.getdata(),d.size))
     if cmin is not None:
         plt.clim([cmin,cmax])

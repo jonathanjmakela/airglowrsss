@@ -1409,7 +1409,7 @@ _instruments['noto01'] = {} # TODO (if we need to)
 _instruments['noto02'] = {} # TODO (if we need to)
 
 # Add "Abbreviation" key to the instrument dictionary
-for instr_name in _instruments.iterkeys():
+for instr_name in _instruments.keys():
     _instruments[instr_name]['Abbreviation'] = instr_name
 
 
@@ -1433,7 +1433,7 @@ def get_site_info(site_name, dn=datetime.datetime.now()):
         site_info = _sites[site_name].copy()
     except KeyError:
         raise Exception('Site name ("%s") not recognized. Try one of %s.' % \
-                         (site_name, str(_sites.keys())))         
+                         (site_name, str(list(_sites.keys()))))         
     
     if site_name == 'mor' and dn < datetime.datetime(2015,7,30):
         # We changed the MOR FPI to follow UTC time on 7/30/15
@@ -1458,7 +1458,7 @@ def get_network_info(network_name, dn=datetime.datetime.now()):
     '''
     
     network_dict = {}
-    if network_name in _networks.keys():
+    if network_name in list(_networks.keys()):
         network_dict = _networks[network_name].copy()
     
     for site_name in _sites:
@@ -1483,7 +1483,7 @@ def get_all_sites_info(dn=datetime.datetime.now()):
         For example, all_site_dicts['uao'] is the same as get_site_info('uao')
     '''
     all_site_dicts = {}
-    for site_name in _sites.keys():
+    for site_name in list(_sites.keys()):
         all_site_dicts[site_name] = get_site_info(site_name, dn)
     return all_site_dicts
 
@@ -1663,7 +1663,7 @@ def get_all_instr_names():
     '''
     Return a list of all of the instrument names (strings).
     '''
-    return _instruments.keys()
+    return list(_instruments.keys())
 
 def get_bad_data_flags(instr_name, dn = datetime.datetime.now()):
     '''
