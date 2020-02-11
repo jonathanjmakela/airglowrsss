@@ -776,7 +776,7 @@ def BinMonthlyData(SITE,YEAR,MONTH,DLIST=[],YLIST=[],SPLIT=False,KP=[0,10],CV=Tr
 
     # Get inputs for multicores
     doy_arg = [a for s in sites for a in dl]
-    yr_arg = [y for s in sites for y in yl]
+    yr_arg = [int(y) for s in sites for y in yl]
     s_arg = [s for s in sites for a in dl]
 
     # Process all days using multicores
