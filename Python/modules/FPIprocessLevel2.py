@@ -143,7 +143,7 @@ class Level1:
 
         # make sure we have data to work with:
         try:
-            npzfile = np.load(self.f)
+            npzfile = np.load(self.f, allow_pickle=True, encoding='latin1')
             self.r = npzfile['FPI_Results'].ravel()[0]
             del npzfile.f
             npzfile.close() # Brian's fix.
@@ -281,7 +281,7 @@ class Level1:
         # remove bad indices corresponding to sigma > 50 or los > 1000.
         for direction in self.directions:
             bad_ind = np.where(\
-                    self.los_sigma[direction] > errorbarlimit
+                    self.los_sigma[direction] > errorbarlimit()
                     #(self.los_fit[direction] > errorbarlimit) \
                     #| (self.los_cal[direction] > errorbarlimit) \
                     #| (np.abs(self.los_wind[direction]) > 1e3) \
@@ -323,8 +323,8 @@ class Level1:
         # and reasonable los velocity
         if 'Zenith' in self.los_wind:
             good_ind = np.where(\
-                    (arr(self.flag_wind['Zenith']) <= cloudthreshold) \
-                    * (self.los_sigma['Zenith'] <= errorbarlimit)\
+                    (arr(self.flag_wind['Zenith']) <= cloudthreshold()) \
+                    * (self.los_sigma['Zenith'] <= errorbarlimit())\
                     * (np.abs(self.los_wind['Zenith']) < 1e3)\
                     )
         else:
@@ -369,7 +369,7 @@ class Level1:
 
                 # Fix all Cloudy times with 0m/s vertical wind since we cannot trust cloudy velocities
                 # Find bad times (cloudy points only)
-                cld_ind = np.where((np.array(self.allc) >= cloudthreshold) | (np.abs(iwe) > errorbarlimit))
+                cld_ind = np.where((np.array(self.allc) >= cloudthreshold()) | (np.abs(iwe) > errorbarlimit()))
                     # * (self.los_fit['Zenith'] < 50.)* (np.abs(self.los_wind['Zenith']) < 1e3))
                 iw[cld_ind] = 0.0
                 #iwe[cld_ind] = 0.0
@@ -2386,7 +2386,7 @@ if __name__=="__main__":
                     diff = abs(t-ts[jj])
                     if diff.seconds < 20.*60 and diff.days==0:
                         cloud = match_cv.allcloud[jj]
-                        if cloud < cloudthreshold:
+                        if cloud < cloudthreshold():
                             c = 'bo'
                         else:
                             c = 'ro'

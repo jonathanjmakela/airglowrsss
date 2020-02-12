@@ -1029,6 +1029,7 @@ def _MPsingleday(SITE_YEAR_DOY,SPLIT,KP,CV,QF,SITELLA,TMODEL,ALT,WEIGHTED,QUIET)
     if 'hwm' in site:
         if len(SITELLA) == 0:
             raise ValueError('Need location for model')
+
         DD = GetModels(SITELLA,year,doy,site,TMODEL=TMODEL,ALT=ALT, \
                 WEIGHTED=WEIGHTED,QUIET=QUIET,MULTICORE=False)
 
