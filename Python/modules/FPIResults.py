@@ -1134,7 +1134,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
             continue
 
         ## Subplot data
-        tits = ['Zonal Wind','Meridional Wind','Veritcal Wind','Temperature']
+        titles = ['Zonal Wind','Meridional Wind','Veritcal Wind','Temperature']
         xlabs = ['Wind Speed [m/s]','Wind Speed [m/s]','Wind Speed [m/s]','Temperature [K]']
         title = ['Clima-Z','Clima-M','Clima-V','Clima-T']
         #years  = [2009, 2010, 2011, 2012, 2013, 2014, 2015]
@@ -1218,7 +1218,7 @@ def PlotClimatology(SITE,YEAR,MONTHSTART=1,NMONTHS=12,SPLIT=False,KP=[0,10],UT=T
         axv[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
         axt[0].xaxis.set_major_formatter(_md.DateFormatter('%H'))
     for i,f in enumerate([fz,fm,fv,ft]):
-        f.suptitle("Average %s %s" % (SITE.upper(), tits[i]), fontsize=16, fontweight='bold')
+        f.suptitle("Average %s %s" % (SITE.upper(), titles[i]), fontsize=16, fontweight='bold')
         f.subplots_adjust(hspace = 0.001)
         f.subplots_adjust(wspace = 0.320)
         f.subplots_adjust(left   = 0.140)
